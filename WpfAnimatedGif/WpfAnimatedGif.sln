@@ -5,6 +5,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfAnimatedGif", "WpfAnimat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfAnimatedGif.Demo", "WpfAnimatedGif.Demo\WpfAnimatedGif.Demo.csproj", "{F15F23F1-D349-426E-8A05-AEEF1A663599}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0E0CF096-6B3E-4338-9DC7-7A52EE4D4648}"
+	ProjectSection(SolutionItems) = preProject
+		WpfAnimatedGif.nuspec = WpfAnimatedGif.nuspec
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 3
