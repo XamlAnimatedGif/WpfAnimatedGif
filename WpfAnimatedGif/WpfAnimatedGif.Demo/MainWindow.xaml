@@ -2,11 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:gif="http://wpfanimatedgif.codeplex.com"
+        gif:ImageBehavior.AnimateInDesignMode="True"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
         <Image Name="img"
                Stretch="None"
-               gif:ImageBehavior.RepeatBehavior="3x"
+               gif:ImageBehavior.RepeatBehavior="Forever"
                gif:ImageBehavior.AnimatedSource="Images/animated.gif" />
         
         <Button Content="Pick an image..."

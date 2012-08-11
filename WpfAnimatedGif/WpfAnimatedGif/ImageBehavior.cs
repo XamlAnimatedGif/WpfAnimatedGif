@@ -1,9 +1,9 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using System.Net;
-using System.Net.Mime;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -80,7 +80,29 @@ namespace WpfAnimatedGif
               "RepeatBehavior",
               typeof(RepeatBehavior),
               typeof(ImageBehavior),
-              new UIPropertyMetadata(RepeatBehavior.Forever));
+              new UIPropertyMetadata(
+                  RepeatBehavior.Forever,
+                  RepeatBehaviorChanged));
+
+        public static bool GetAnimateInDesignMode(DependencyObject obj)
+        {
+            return (bool)obj.GetValue(AnimateInDesignModeProperty);
+        }
+
+        public static void SetAnimateInDesignMode(DependencyObject obj, bool value)
+        {
+            obj.SetValue(AnimateInDesignModeProperty, value);
+        }
+
+        public static readonly DependencyProperty AnimateInDesignModeProperty =
+            DependencyProperty.RegisterAttached(
+                "AnimateInDesignMode",
+                typeof(bool),
+                typeof(ImageBehavior),
+                new FrameworkPropertyMetadata(
+                    false,
+                    FrameworkPropertyMetadataOptions.Inherits,
+                    AnimateInDesignModeChanged));
 
         private static void AnimatedSourceChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
@@ -100,10 +122,42 @@ namespace WpfAnimatedGif
             }
         }
 
+        private static void RepeatBehaviorChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+        {
+            Image imageControl = o as Image;
+            if (imageControl == null)
+                return;
+
+            ImageSource source = GetAnimatedSource(imageControl);
+            if (source != null && imageControl.IsLoaded)
+                InitAnimationOrImage(imageControl);
+        }
+
+        private static void AnimateInDesignModeChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+        {
+            Image imageControl = o as Image;
+            if (imageControl == null)
+                return;
+
+            bool newValue = (bool) e.NewValue;
+
+            ImageSource source = GetAnimatedSource(imageControl);
+            if (source != null && imageControl.IsLoaded)
+            {
+                if (newValue)
+                    InitAnimationOrImage(imageControl);
+                else
+                    imageControl.BeginAnimation(Image.SourceProperty, null);
+            }
+        }
+
         private static void InitAnimationOrImage(Image imageControl)
         {
             BitmapSource source = GetAnimatedSource(imageControl) as BitmapSource;
-            if (source != null)
+            bool isInDesignMode = DesignerProperties.GetIsInDesignMode(imageControl);
+            bool animateInDesignMode = GetAnimateInDesignMode(imageControl);
+            bool shouldAnimate = !isInDesignMode || animateInDesignMode;
+            if (source != null && shouldAnimate)
             {
                 GifFile gifFile;
                 var decoder = GetDecoder(source, out gifFile) as GifBitmapDecoder;
@@ -144,7 +198,6 @@ namespace WpfAnimatedGif
                 }
             }
             imageControl.Source = source;
-            return;
         }
 
         private static BitmapDecoder GetDecoder(BitmapSource image, out GifFile gifFile)
@@ -278,10 +331,9 @@ namespace WpfAnimatedGif
                 Top = 0
             };
 
-            BitmapMetadata metadata;
             try
             {
-                metadata = frame.Metadata as BitmapMetadata;
+                BitmapMetadata metadata = frame.Metadata as BitmapMetadata;
                 if (metadata != null)
                 {
                     const string delayQuery = "/grctlext/Delay";
