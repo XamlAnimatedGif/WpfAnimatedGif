@@ -84,16 +84,29 @@ namespace WpfAnimatedGif
                   RepeatBehavior.Forever,
                   RepeatBehaviorChanged));
 
+        /// <summary>
+        /// Gets the value of the <c>AnimateInDesignMode</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element from which to read the property value.</param>
+        /// <returns>true if GIF animations are shown in design mode; false otherwise.</returns>
         public static bool GetAnimateInDesignMode(DependencyObject obj)
         {
             return (bool)obj.GetValue(AnimateInDesignModeProperty);
         }
 
+        /// <summary>
+        /// Sets the value of the <c>AnimateInDesignMode</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element on which to set the property value.</param>
+        /// <param name="value">true to show GIF animations in design mode; false otherwise.</param>
         public static void SetAnimateInDesignMode(DependencyObject obj, bool value)
         {
             obj.SetValue(AnimateInDesignModeProperty, value);
         }
 
+        /// <summary>
+        /// Identifies the <c>AnimateInDesignMode</c> attached property.
+        /// </summary>
         public static readonly DependencyProperty AnimateInDesignModeProperty =
             DependencyProperty.RegisterAttached(
                 "AnimateInDesignMode",
