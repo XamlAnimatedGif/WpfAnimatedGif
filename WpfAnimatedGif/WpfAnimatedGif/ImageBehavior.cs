@@ -117,6 +117,42 @@ namespace WpfAnimatedGif
                     FrameworkPropertyMetadataOptions.Inherits,
                     AnimateInDesignModeChanged));
 
+        /// <summary>
+        /// Identifies the <c>AnimationCompleted</c> attached event.
+        /// </summary>
+        public static readonly RoutedEvent AnimationCompletedEvent =
+            EventManager.RegisterRoutedEvent(
+                "AnimationCompleted",
+                RoutingStrategy.Bubble,
+                typeof (RoutedEventHandler),
+                typeof (ImageBehavior));
+
+        /// <summary>
+        /// Adds a handler for the AnimationCompleted attached event.
+        /// </summary>
+        /// <param name="d">The UIElement that listens to this event.</param>
+        /// <param name="handler">The event handler to be added.</param>
+        public static void AddAnimationCompletedHandler(DependencyObject d, RoutedEventHandler handler)
+        {
+            var element = d as UIElement;
+            if (element == null)
+                return;
+            element.AddHandler(AnimationCompletedEvent, handler);
+        }
+
+        /// <summary>
+        /// Removes a handler for the AnimationCompleted attached event.
+        /// </summary>
+        /// <param name="d">The UIElement that listens to this event.</param>
+        /// <param name="handler">The event handler to be removed.</param>
+        public static void RemoveAnimationCompletedHandler(DependencyObject d, RoutedEventHandler handler)
+        {
+            var element = d as UIElement;
+            if (element == null)
+                return;
+            element.RemoveHandler(AnimationCompletedEvent, handler);
+        }
+
         private static void AnimatedSourceChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
             Image imageControl = o as Image;
@@ -206,6 +242,11 @@ namespace WpfAnimatedGif
                         imageControl.Source = (ImageSource)animation.KeyFrames[0].Value;
                     else
                         imageControl.Source = decoder.Frames[0];
+                    animation.Completed += delegate
+                                           {
+                                               imageControl.RaiseEvent(
+                                                   new RoutedEventArgs(AnimationCompletedEvent, imageControl));
+                                           };
                     imageControl.BeginAnimation(Image.SourceProperty, animation);
                     return;
                 }

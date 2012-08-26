@@ -7,8 +7,9 @@
     <Grid>
         <Image Name="img"
                Stretch="None"
-               gif:ImageBehavior.RepeatBehavior="Forever"
-               gif:ImageBehavior.AnimatedSource="Images/animated.gif" />
+               gif:ImageBehavior.RepeatBehavior="3x"
+               gif:ImageBehavior.AnimatedSource="Images/animated.gif"
+               gif:ImageBehavior.AnimationCompleted="AnimationCompleted"/>
         
         <Button Content="Pick an image..."
                 HorizontalAlignment="Right" VerticalAlignment="Bottom"

@@ -36,5 +36,10 @@ namespace WpfAnimatedGif.Demo
                 ImageBehavior.SetAnimatedSource(img, imgSource);
             }
         }
+
+        private void AnimationCompleted(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Animation completed");
+        }
     }
 }
