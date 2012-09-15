@@ -81,7 +81,7 @@ namespace WpfAnimatedGif
               typeof(RepeatBehavior),
               typeof(ImageBehavior),
               new UIPropertyMetadata(
-                  RepeatBehavior.Forever,
+                  default(RepeatBehavior),
                   RepeatBehaviorChanged));
 
         /// <summary>
@@ -237,7 +237,19 @@ namespace WpfAnimatedGif
                         index++;
                     }
                     animation.Duration = totalDuration;
-                    animation.RepeatBehavior = GetRepeatBehavior(imageControl);
+                    
+                    var repeatBehavior = GetRepeatBehavior(imageControl);
+                    if (repeatBehavior == default(RepeatBehavior))
+                    {
+                        // Unspecified repeat behavior: use repeatCount from GIF metadata
+                        ushort repeatCount = gifFile != null ? gifFile.RepeatCount : (ushort)0;
+                        repeatBehavior =
+                            repeatCount == 0
+                                ? RepeatBehavior.Forever
+                                : new RepeatBehavior(repeatCount);
+                    }
+                    animation.RepeatBehavior = repeatBehavior;
+
                     if (animation.KeyFrames.Count > 0)
                         imageControl.Source = (ImageSource)animation.KeyFrames[0].Value;
                     else
@@ -304,11 +316,12 @@ namespace WpfAnimatedGif
 
         private static GifFile DecodeGifFile(Uri uri)
         {
-            Stream stream;
+            Stream stream = null;
             if (uri.Scheme == PackUriHelper.UriSchemePack)
             {
                 var sri = Application.GetResourceStream(uri);
-                stream = sri.Stream;
+                if (sri != null)
+                    stream = sri.Stream;
             }
             else
             {
@@ -369,8 +382,10 @@ namespace WpfAnimatedGif
         {
             Replace = 0,
             Combine = 1,
+            // ReSharper disable UnusedMember.Local
             RestoreBackground = 2,
             RestorePrevious = 3
+            // ReSharper restore UnusedMember.Local
         }
 
         private static FrameInfo GetFrameInfo(BitmapFrame frame, GifFrame gifFrame)
@@ -387,41 +402,7 @@ namespace WpfAnimatedGif
 
             try
             {
-                BitmapMetadata metadata = frame.Metadata as BitmapMetadata;
-                if (metadata != null)
-                {
-                    const string delayQuery = "/grctlext/Delay";
-                    const string disposalQuery = "/grctlext/Disposal";
-                    const string widthQuery = "/imgdesc/Width";
-                    const string heightQuery = "/imgdesc/Height";
-                    const string leftQuery = "/imgdesc/Left";
-                    const string topQuery = "/imgdesc/Top";
-
-                    var delay = metadata.GetQueryOrNull<ushort>(delayQuery);
-                    if (delay.HasValue && delay.Value > 0)
-                        frameInfo.Delay = TimeSpan.FromMilliseconds(10 * delay.Value);
-
-                    var disposal = metadata.GetQueryOrNull<byte>(disposalQuery);
-                    if (disposal.HasValue)
-                        frameInfo.DisposalMethod = (FrameDisposalMethod)disposal.Value;
-
-                    var width = metadata.GetQueryOrNull<ushort>(widthQuery);
-                    if (width.HasValue && width.Value > 0)
-                        frameInfo.Width = width.Value;
-
-                    var height = metadata.GetQueryOrNull<ushort>(heightQuery);
-                    if (height.HasValue && height.Value > 0)
-                        frameInfo.Height = height.Value;
-
-                    var left = metadata.GetQueryOrNull<ushort>(leftQuery);
-                    if (left.HasValue && left.Value > 0)
-                        frameInfo.Left = left.Value;
-
-                    var top = metadata.GetQueryOrNull<ushort>(topQuery);
-                    if (top.HasValue && top.Value > 0)
-                        frameInfo.Top = top.Value;
-                }
-                else if (gifFrame != null)
+                if (gifFrame != null)
                 {
                     var gce = gifFrame.Extensions.OfType<GifGraphicControlExtension>().FirstOrDefault();
                     if (gce != null)
@@ -445,18 +426,6 @@ namespace WpfAnimatedGif
             }
 
             return frameInfo;
-        }
-
-        private static T? GetQueryOrNull<T>(this BitmapMetadata metadata, string query)
-            where T : struct
-        {
-            if (metadata.ContainsQuery(query))
-            {
-                object value = metadata.GetQuery(query);
-                if (value != null)
-                    return (T) value;
-            }
-            return null;
         }
 
         private static void DoWhenLoaded<T>(this T element, Action<T> action)

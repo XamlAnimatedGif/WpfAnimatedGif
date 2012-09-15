@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace WpfAnimatedGif.Decoding
 {
@@ -9,6 +10,7 @@ namespace WpfAnimatedGif.Decoding
         public GifColor[] GlobalColorTable { get; set; }
         public IList<GifFrame> Frames { get; set; }
         public IList<GifExtension> Extensions { get; set; }
+        public ushort RepeatCount { get; set; }
 
         private GifFile()
         {
@@ -30,6 +32,15 @@ namespace WpfAnimatedGif.Decoding
                 GlobalColorTable = GifHelpers.ReadColorTable(stream, Header.LogicalScreenDescriptor.GlobalColorTableSize);
             }
             ReadFrames(stream, metadataOnly);
+
+            var netscapeExtension =
+                            Extensions
+                                .OfType<GifApplicationExtension>()
+                                .FirstOrDefault(GifHelpers.IsNetscapeExtension);
+            if (netscapeExtension != null)
+            {
+                RepeatCount = GifHelpers.GetRepeatCount(netscapeExtension);
+            }
         }
 
         private void ReadFrames(Stream stream, bool metadataOnly)

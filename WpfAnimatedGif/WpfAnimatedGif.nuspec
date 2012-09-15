@@ -22,7 +22,11 @@
     </frameworkAssemblies>
   </metadata>
   <files>
-    <file src="WpfAnimatedGif\bin\Release\WpfAnimatedGif.dll" target="lib" />
-    <file src="WpfAnimatedGif\bin\Release\WpfAnimatedGif.xml" target="lib" />
+    <file src="WpfAnimatedGif\bin\Release\WpfAnimatedGif.dll" target="lib\net35" />
+    <file src="WpfAnimatedGif\bin\Release\WpfAnimatedGif.xml" target="lib\net35" />
+    <file src="WpfAnimatedGif\bin\Release\WpfAnimatedGif.dll" target="lib\net40" />
+    <file src="WpfAnimatedGif\bin\Release\WpfAnimatedGif.xml" target="lib\net40" />
+    <file src="WpfAnimatedGif\bin\Release\WpfAnimatedGif.dll" target="lib\net45" />
+    <file src="WpfAnimatedGif\bin\Release\WpfAnimatedGif.xml" target="lib\net45" />
   </files>
 </package>

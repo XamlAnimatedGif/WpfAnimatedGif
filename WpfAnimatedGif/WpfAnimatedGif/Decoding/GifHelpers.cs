@@ -6,14 +6,14 @@ namespace WpfAnimatedGif.Decoding
 {
     internal static class GifHelpers
     {
-        internal static string ReadString(Stream stream, int length)
+        public static string ReadString(Stream stream, int length)
         {
             byte[] bytes = new byte[length];
             stream.Read(bytes, 0, length);
             return Encoding.ASCII.GetString(bytes);
         }
 
-        internal static byte[] ReadDataBlocks(Stream stream, bool discard)
+        public static byte[] ReadDataBlocks(Stream stream, bool discard)
         {
             MemoryStream ms = discard ? null : new MemoryStream();
             using (ms)
@@ -32,7 +32,7 @@ namespace WpfAnimatedGif.Decoding
             }
         }
 
-        internal static GifColor[] ReadColorTable(Stream stream, int size)
+        public static GifColor[] ReadColorTable(Stream stream, int size)
         {
             int length = 3 * size;
             byte[] bytes = new byte[length];
@@ -48,22 +48,37 @@ namespace WpfAnimatedGif.Decoding
             return colorTable;
         }
 
-        internal static Exception UnexpectedEndOfStreamException()
+        public static bool IsNetscapeExtension(GifApplicationExtension ext)
+        {
+            return ext.ApplicationIdentifier == "NETSCAPE"
+                && Encoding.ASCII.GetString(ext.AuthenticationCode) == "2.0";
+        }
+
+        public static ushort GetRepeatCount(GifApplicationExtension ext)
+        {
+            if (ext.Data.Length >= 3)
+            {
+                return BitConverter.ToUInt16(ext.Data, 1);
+            }
+            return ushort.MaxValue;
+        }
+
+        public static Exception UnexpectedEndOfStreamException()
         {
             return new GifDecoderException("Unexpected end of stream before trailer was encountered");
         }
 
-        internal static Exception UnknownBlockTypeException(int blockId)
+        public static Exception UnknownBlockTypeException(int blockId)
         {
             return new GifDecoderException("Unknown block type: 0x" + blockId.ToString("x2"));
         }
 
-        internal static Exception UnknownExtensionTypeException(int extensionLabel)
+        public static Exception UnknownExtensionTypeException(int extensionLabel)
         {
             return new GifDecoderException("Unknown extension type: 0x" + extensionLabel.ToString("x2"));
         }
 
-        internal static Exception InvalidBlockSizeException(string blockName, int expectedBlockSize, int actualBlockSize)
+        public static Exception InvalidBlockSizeException(string blockName, int expectedBlockSize, int actualBlockSize)
         {
             return new GifDecoderException(
                 string.Format(

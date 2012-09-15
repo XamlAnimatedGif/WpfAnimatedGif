@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfAnimatedGif", "WpfAnimatedGif\WpfAnimatedGif.csproj", "{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfAnimatedGif.Demo", "WpfAnimatedGif.Demo\WpfAnimatedGif.Demo.csproj", "{F15F23F1-D349-426E-8A05-AEEF1A663599}"
