@@ -215,8 +215,8 @@ namespace WpfAnimatedGif
                     int index = 0;
                     var animation = new ObjectAnimationUsingKeyFrames();
                     var totalDuration = TimeSpan.Zero;
-                    BitmapSource prevFrame = null;
-                    FrameInfo prevInfo = null;                    
+                    BitmapSource refFrame = null;
+                    FrameInfo refFrameInfo = null;                    
                     foreach (var rawFrame in decoder.Frames)
                     {
                         GifFrame gifFrame = null;
@@ -226,14 +226,12 @@ namespace WpfAnimatedGif
                         var frame = MakeFrame(
                             source,
                             rawFrame, info,
-                            prevFrame, prevInfo);
+                            ref refFrame, ref refFrameInfo);
 
                         var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
                         animation.KeyFrames.Add(keyFrame);
                         
                         totalDuration += info.Delay;
-                        prevFrame = frame;
-                        prevInfo = info;
                         index++;
                     }
                     animation.Duration = totalDuration;
@@ -341,16 +339,15 @@ namespace WpfAnimatedGif
         private static BitmapSource MakeFrame(
             BitmapSource fullImage,
             BitmapSource rawFrame, FrameInfo frameInfo,
-            BitmapSource previousFrame, FrameInfo previousFrameInfo)
+            ref BitmapSource referenceFrame, ref FrameInfo referenceFrameInfo)
         {
             DrawingVisual visual = new DrawingVisual();
             using (var context = visual.RenderOpen())
             {
-                if (previousFrameInfo != null && previousFrame != null &&
-                    previousFrameInfo.DisposalMethod == FrameDisposalMethod.Combine)
+                if (referenceFrameInfo != null && referenceFrame != null)
                 {
                     var fullRect = new Rect(0, 0, fullImage.PixelWidth, fullImage.PixelHeight);
-                    context.DrawImage(previousFrame, fullRect);
+                    context.DrawImage(referenceFrame, fullRect);
                 }
 
                 context.DrawImage(rawFrame, frameInfo.Rect);
@@ -360,6 +357,11 @@ namespace WpfAnimatedGif
                 fullImage.DpiX, fullImage.DpiY,
                 PixelFormats.Pbgra32);
             bitmap.Render(visual);
+            if (frameInfo.DisposalMethod == FrameDisposalMethod.Combine)
+            {
+                referenceFrameInfo = frameInfo;
+                referenceFrame = bitmap;
+            }
             return bitmap;
         }
 
