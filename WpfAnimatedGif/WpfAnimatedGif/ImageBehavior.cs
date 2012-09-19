@@ -215,23 +215,48 @@ namespace WpfAnimatedGif
                     int index = 0;
                     var animation = new ObjectAnimationUsingKeyFrames();
                     var totalDuration = TimeSpan.Zero;
-                    BitmapSource refFrame = null;
-                    FrameInfo refFrameInfo = null;                    
+                    BitmapSource baseFrame = null;
                     foreach (var rawFrame in decoder.Frames)
                     {
-                        GifFrame gifFrame = null;
+                        GifFrame metadata = null;
+                        TimeSpan delay = TimeSpan.FromMilliseconds(100);
+                        FrameDisposalMethod disposalMethod = FrameDisposalMethod.None;
                         if (gifFile != null && index < gifFile.Frames.Count)
-                            gifFrame = gifFile.Frames[index];
-                        var info = GetFrameInfo(rawFrame, gifFrame);
+                        {
+                            metadata = gifFile.Frames[index];
+                            var gce = metadata.Extensions.OfType<GifGraphicControlExtension>().FirstOrDefault();
+                            if (gce != null)
+                            {
+                                if (gce.Delay > 0)
+                                    delay = TimeSpan.FromMilliseconds(gce.Delay);
+                                disposalMethod = (FrameDisposalMethod) gce.DisposalMethod;
+                            }
+                        }
+
                         var frame = MakeFrame(
                             source,
-                            rawFrame, info,
-                            ref refFrame, ref refFrameInfo);
+                            rawFrame, metadata,
+                            baseFrame);
 
                         var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
                         animation.KeyFrames.Add(keyFrame);
                         
-                        totalDuration += info.Delay;
+                        totalDuration += delay;
+
+                        switch (disposalMethod)
+                        {
+                            case FrameDisposalMethod.None:
+                            case FrameDisposalMethod.DoNotDispose:
+                                baseFrame = frame;
+                                break;
+                            case FrameDisposalMethod.RestoreBackground:
+                                baseFrame = null;
+                                break;
+                            case FrameDisposalMethod.RestorePrevious:
+                                // Reuse same base frame
+                                break;
+                        }
+
                         index++;
                     }
                     animation.Duration = totalDuration;
@@ -338,96 +363,37 @@ namespace WpfAnimatedGif
 
         private static BitmapSource MakeFrame(
             BitmapSource fullImage,
-            BitmapSource rawFrame, FrameInfo frameInfo,
-            ref BitmapSource referenceFrame, ref FrameInfo referenceFrameInfo)
+            BitmapSource rawFrame, GifFrame metadata,
+            BitmapSource baseFrame)
         {
             DrawingVisual visual = new DrawingVisual();
             using (var context = visual.RenderOpen())
             {
-                if (referenceFrameInfo != null && referenceFrame != null)
+                if (baseFrame != null)
                 {
                     var fullRect = new Rect(0, 0, fullImage.PixelWidth, fullImage.PixelHeight);
-                    context.DrawImage(referenceFrame, fullRect);
+                    context.DrawImage(baseFrame, fullRect);
                 }
 
-                context.DrawImage(rawFrame, frameInfo.Rect);
+                var d = metadata.Descriptor;
+                var rect = new Rect(d.Left, d.Top, d.Width, d.Height);
+                context.DrawImage(rawFrame, rect);
             }
             var bitmap = new RenderTargetBitmap(
                 fullImage.PixelWidth, fullImage.PixelHeight,
                 fullImage.DpiX, fullImage.DpiY,
                 PixelFormats.Pbgra32);
             bitmap.Render(visual);
-            if (frameInfo.DisposalMethod == FrameDisposalMethod.Combine)
-            {
-                referenceFrameInfo = frameInfo;
-                referenceFrame = bitmap;
-            }
+
             return bitmap;
-        }
-
-        private class FrameInfo
-        {
-            public TimeSpan Delay { get; set; }
-            public FrameDisposalMethod DisposalMethod { get; set; }
-            public double Width { get; set; }
-            public double Height { get; set; }
-            public double Left { get; set; }
-            public double Top { get; set; }
-
-            public Rect Rect
-            {
-                get { return new Rect(Left, Top, Width, Height); }
-            }
         }
 
         private enum FrameDisposalMethod
         {
-            Replace = 0,
-            Combine = 1,
-            // ReSharper disable UnusedMember.Local
+            None = 0,
+            DoNotDispose = 1,
             RestoreBackground = 2,
             RestorePrevious = 3
-            // ReSharper restore UnusedMember.Local
-        }
-
-        private static FrameInfo GetFrameInfo(BitmapFrame frame, GifFrame gifFrame)
-        {
-            var frameInfo = new FrameInfo
-            {
-                Delay = TimeSpan.FromMilliseconds(100),
-                DisposalMethod = FrameDisposalMethod.Replace,
-                Width = frame.PixelWidth,
-                Height = frame.PixelHeight,
-                Left = 0,
-                Top = 0
-            };
-
-            try
-            {
-                if (gifFrame != null)
-                {
-                    var gce = gifFrame.Extensions.OfType<GifGraphicControlExtension>().FirstOrDefault();
-                    if (gce != null)
-                    {
-                        frameInfo.DisposalMethod = (FrameDisposalMethod)gce.DisposalMethod;
-                        if (gce.Delay > 0)
-                            frameInfo.Delay = TimeSpan.FromMilliseconds(gce.Delay);
-                    }
-                    if (gifFrame.Descriptor.Left > 0)
-                        frameInfo.Left = gifFrame.Descriptor.Left;
-                    if (gifFrame.Descriptor.Top > 0)
-                        frameInfo.Top = gifFrame.Descriptor.Top;
-                    if (gifFrame.Descriptor.Width > 0)
-                        frameInfo.Width = gifFrame.Descriptor.Width;
-                    if (gifFrame.Descriptor.Height > 0)
-                        frameInfo.Height = gifFrame.Descriptor.Height;
-                }
-            }
-            catch (NotSupportedException)
-            {
-            }
-
-            return frameInfo;
         }
 
         private static void DoWhenLoaded<T>(this T element, Action<T> action)

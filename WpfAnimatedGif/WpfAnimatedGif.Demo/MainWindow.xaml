@@ -7,7 +7,7 @@
     <Grid>
         <Image Name="img"
                Stretch="None"
-               gif:ImageBehavior.RepeatBehavior="3x"
+               gif:ImageBehavior.RepeatBehavior="Forever"
                gif:ImageBehavior.AnimatedSource="Images/animated.gif"
                gif:ImageBehavior.AnimationCompleted="AnimationCompleted"/>
         

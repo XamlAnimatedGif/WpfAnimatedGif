@@ -13,9 +13,9 @@ namespace WpfAnimatedGif.Decoding
             _b = b;
         }
 
-        public int R { get { return _r; } }
-        public int G { get { return _g; } }
-        public int B { get { return _b; } }
+        public byte R { get { return _r; } }
+        public byte G { get { return _g; } }
+        public byte B { get { return _b; } }
 
         public override string ToString()
         {
