@@ -327,7 +327,7 @@ namespace WpfAnimatedGif
                 stream.Position = 0;
                 decoder = BitmapDecoder.Create(stream, createOptions, BitmapCacheOption.OnLoad);
                 stream.Position = 0;
-                gifFile = GifDecoder.DecodeGif(stream, true);
+                gifFile = GifFile.ReadGifFile(stream, true);
             }
             else if (uri != null)
             {
@@ -355,7 +355,7 @@ namespace WpfAnimatedGif
             {
                 using (stream)
                 {
-                    return GifDecoder.DecodeGif(stream, true);
+                    return GifFile.ReadGifFile(stream, true);
                 }
             }
             return null;

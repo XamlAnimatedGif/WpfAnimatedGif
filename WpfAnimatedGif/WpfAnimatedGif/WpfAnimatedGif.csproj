@@ -49,7 +49,6 @@
     <Compile Include="Decoding\GifBlockKind.cs" />
     <Compile Include="Decoding\GifColor.cs" />
     <Compile Include="Decoding\GifCommentExtension.cs" />
-    <Compile Include="Decoding\GifDecoder.cs" />
     <Compile Include="Decoding\GifDecoderException.cs" />
     <Compile Include="Decoding\GifExtension.cs" />
     <Compile Include="Decoding\GifFile.cs" />
