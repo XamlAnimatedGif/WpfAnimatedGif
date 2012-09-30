@@ -97,13 +97,18 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\animated.gif" />
+    <Resource Include="Images\working.gif" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\WpfAnimatedGif\WpfAnimatedGif.csproj">
       <Project>{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}</Project>
       <Name>WpfAnimatedGif</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\bomb.gif" />
+    <Resource Include="Images\earth.gif" />
+    <Resource Include="Images\radar.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
