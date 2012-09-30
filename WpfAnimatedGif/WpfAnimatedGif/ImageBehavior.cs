@@ -297,20 +297,30 @@ namespace WpfAnimatedGif
                 }
             }
 
-            if (stream != null)
+            if (decoder == null)
             {
-                stream.Position = 0;
-                decoder = BitmapDecoder.Create(stream, createOptions, BitmapCacheOption.OnLoad);
-                stream.Position = 0;
-
-                if (!CanReadNativeMetadata(decoder))
-                    gifFile = GifFile.ReadGifFile(stream, true);
+                if (stream != null)
+                {
+                    stream.Position = 0;
+                    decoder = BitmapDecoder.Create(stream, createOptions, BitmapCacheOption.OnLoad);
+                }
+                else if (uri != null)
+                {
+                    decoder = BitmapDecoder.Create(uri, createOptions, BitmapCacheOption.OnLoad);
+                }
             }
-            else if (uri != null)
+
+            if (decoder != null && !CanReadNativeMetadata(decoder))
             {
-                decoder = BitmapDecoder.Create(uri, createOptions, BitmapCacheOption.OnLoad);
-                if (!CanReadNativeMetadata(decoder))
+                if (stream != null)
+                {
+                    stream.Position = 0;
+                    gifFile = GifFile.ReadGifFile(stream, true);
+                }
+                else if (uri != null)
+                {
                     gifFile = DecodeGifFile(uri);
+                }
             }
             return decoder;
         }
