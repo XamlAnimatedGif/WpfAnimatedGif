@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -207,7 +208,12 @@ namespace WpfAnimatedGif
             bool isInDesignMode = DesignerProperties.GetIsInDesignMode(imageControl);
             bool animateInDesignMode = GetAnimateInDesignMode(imageControl);
             bool shouldAnimate = !isInDesignMode || animateInDesignMode;
-            if (source != null && shouldAnimate)
+            
+            // For a BitmapImage with a relative UriSource, the loading is deferred until
+            // BaseUri is set. This method will be called again when BaseUri is set.
+            bool isLoadingDeferred = IsLoadingDeferred(source);
+            
+            if (source != null && shouldAnimate && !isLoadingDeferred)
             {
                 GifFile gifMetadata;
                 var decoder = GetDecoder(source, out gifMetadata) as GifBitmapDecoder;
@@ -248,20 +254,50 @@ namespace WpfAnimatedGif
                     
                     animation.RepeatBehavior = GetActualRepeatBehavior(imageControl, decoder, gifMetadata);
 
-                    if (animation.KeyFrames.Count > 0)
-                        imageControl.Source = (ImageSource)animation.KeyFrames[0].Value;
-                    else
-                        imageControl.Source = decoder.Frames[0];
                     animation.Completed += delegate
-                                           {
-                                               imageControl.RaiseEvent(
-                                                   new RoutedEventArgs(AnimationCompletedEvent, imageControl));
-                                           };
+                    {
+                        imageControl.RaiseEvent(
+                            new RoutedEventArgs(AnimationCompletedEvent, imageControl));
+                    };
+
+                    animation.Freeze();
+
+                    if (animation.KeyFrames.Count > 0)
+                    {
+                        // For some reason, it sometimes throws an exception the first time... the second time it works.
+                        TryTwice(() => imageControl.Source = (ImageSource) animation.KeyFrames[0].Value);
+                    }
+                    else
+                    {
+                        imageControl.Source = decoder.Frames[0];
+                    }
                     imageControl.BeginAnimation(Image.SourceProperty, animation);
                     return;
                 }
             }
             imageControl.Source = source;
+        }
+
+        private static void TryTwice(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception)
+            {
+                action();
+            }
+        }
+
+        private static bool IsLoadingDeferred(BitmapSource source)
+        {
+            var bmp = source as BitmapImage;
+            if (bmp == null)
+                return false;
+            if (bmp.UriSource != null && !bmp.UriSource.IsAbsoluteUri)
+                return bmp.BaseUri == null;
+            return false;
         }
 
         private static BitmapDecoder GetDecoder(BitmapSource image, out GifFile gifFile)
@@ -304,7 +340,7 @@ namespace WpfAnimatedGif
                     stream.Position = 0;
                     decoder = BitmapDecoder.Create(stream, createOptions, BitmapCacheOption.OnLoad);
                 }
-                else if (uri != null)
+                else if (uri != null && uri.IsAbsoluteUri)
                 {
                     decoder = BitmapDecoder.Create(uri, createOptions, BitmapCacheOption.OnLoad);
                 }
