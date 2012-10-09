@@ -7,7 +7,6 @@ using System.Net;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -365,10 +364,8 @@ namespace WpfAnimatedGif
         {
             try
             {
-#pragma warning disable 168
                 var m = decoder.Metadata;
-                return true;
-#pragma warning restore 168
+                return m != null;
             }
             catch
             {
