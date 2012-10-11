@@ -24,7 +24,7 @@ namespace WpfAnimatedGif.Decoding
         private void Read(Stream stream)
         {
             byte[] bytes = new byte[7];
-            stream.Read(bytes, 0, bytes.Length);
+            stream.ReadAll(bytes, 0, bytes.Length);
 
             Width = BitConverter.ToUInt16(bytes, 0);
             Height = BitConverter.ToUInt16(bytes, 2);

@@ -37,7 +37,7 @@ namespace WpfAnimatedGif.Decoding
             // Note: at this point, the label (0xF9) has already been read
 
             byte[] bytes = new byte[6];
-            stream.Read(bytes, 0, bytes.Length);
+            stream.ReadAll(bytes, 0, bytes.Length);
             BlockSize = bytes[0]; // should always be 4
             if (BlockSize != 4)
                 throw GifHelpers.InvalidBlockSizeException("Graphic Control Extension", 4, BlockSize);

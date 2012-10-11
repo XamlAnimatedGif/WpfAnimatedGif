@@ -45,7 +45,7 @@ namespace WpfAnimatedGif.Decoding
             // Note: at this point, the label (0x01) has already been read
 
             byte[] bytes = new byte[13];
-            stream.Read(bytes,0, bytes.Length);
+            stream.ReadAll(bytes,0, bytes.Length);
 
             BlockSize = bytes[0];
             if (BlockSize != 12)

@@ -9,7 +9,7 @@ namespace WpfAnimatedGif.Decoding
         public static string ReadString(Stream stream, int length)
         {
             byte[] bytes = new byte[length];
-            stream.Read(bytes, 0, length);
+            stream.ReadAll(bytes, 0, length);
             return Encoding.ASCII.GetString(bytes);
         }
 
@@ -22,7 +22,7 @@ namespace WpfAnimatedGif.Decoding
                 while ((len = stream.ReadByte()) > 0)
                 {
                     byte[] bytes = new byte[len];
-                    stream.Read(bytes, 0, len);
+                    stream.ReadAll(bytes, 0, len);
                     if (ms != null)
                         ms.Write(bytes, 0, len);
                 }
@@ -36,7 +36,7 @@ namespace WpfAnimatedGif.Decoding
         {
             int length = 3 * size;
             byte[] bytes = new byte[length];
-            stream.Read(bytes, 0, length);
+            stream.ReadAll(bytes, 0, length);
             GifColor[] colorTable = new GifColor[size];
             for (int i = 0; i < size; i++)
             {
@@ -96,6 +96,15 @@ namespace WpfAnimatedGif.Decoding
         public static Exception UnsupportedVersionException(string version)
         {
             return new GifDecoderException("Unsupported version: " + version);
+        }
+
+        public static void ReadAll(this Stream stream, byte[] buffer, int offset, int count)
+        {
+            int totalRead = 0;
+            while (totalRead < count)
+            {
+                totalRead += stream.Read(buffer, offset + totalRead, count - totalRead);
+            }
         }
     }
 }

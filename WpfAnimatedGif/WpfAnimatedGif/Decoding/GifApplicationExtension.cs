@@ -35,7 +35,7 @@ namespace WpfAnimatedGif.Decoding
             // Note: at this point, the label (0xFF) has already been read
 
             byte[] bytes = new byte[12];
-            stream.Read(bytes, 0, bytes.Length);
+            stream.ReadAll(bytes, 0, bytes.Length);
             BlockSize = bytes[0]; // should always be 11
             if (BlockSize != 11)
                 throw GifHelpers.InvalidBlockSizeException("Application Extension", 11, BlockSize);
