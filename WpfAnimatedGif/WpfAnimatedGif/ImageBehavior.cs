@@ -345,7 +345,7 @@ namespace WpfAnimatedGif
                 }
             }
 
-            if (decoder != null && !CanReadNativeMetadata(decoder))
+            if (decoder is GifBitmapDecoder && !CanReadNativeMetadata(decoder))
             {
                 if (stream != null)
                 {

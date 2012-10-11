@@ -19,7 +19,8 @@ namespace WpfAnimatedGif.Demo
                           "pack://application:,,,/images/working.gif",
                           "pack://application:,,,/images/earth.gif",
                           "pack://application:,,,/images/radar.gif",
-                          "pack://application:,,,/images/bomb.gif"
+                          "pack://application:,,,/images/bomb.gif",
+                          "pack://application:,,,/images/nonanimated.png"
                       };
             DataContext = this;
         }
