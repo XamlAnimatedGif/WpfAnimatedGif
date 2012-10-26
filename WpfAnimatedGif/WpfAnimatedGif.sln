@@ -15,13 +15,13 @@ Global
 		SccNumberOfProjects = 3
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs13
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = WpfAnimatedGif\\WpfAnimatedGif.csproj
-		SccProjectName1 = WpfAnimatedGif
-		SccLocalPath1 = WpfAnimatedGif
-		SccProjectUniqueName2 = WpfAnimatedGif.Demo\\WpfAnimatedGif.Demo.csproj
-		SccProjectName2 = WpfAnimatedGif.Demo
-		SccLocalPath2 = WpfAnimatedGif.Demo
+		SccProjectUniqueName0 = WpfAnimatedGif\\WpfAnimatedGif.csproj
+		SccProjectName0 = WpfAnimatedGif
+		SccLocalPath0 = WpfAnimatedGif
+		SccProjectUniqueName1 = WpfAnimatedGif.Demo\\WpfAnimatedGif.Demo.csproj
+		SccProjectName1 = WpfAnimatedGif.Demo
+		SccLocalPath1 = WpfAnimatedGif.Demo
+		SccLocalPath2 = .
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
