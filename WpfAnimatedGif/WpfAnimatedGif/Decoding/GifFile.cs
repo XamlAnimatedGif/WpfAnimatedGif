@@ -37,10 +37,11 @@ namespace WpfAnimatedGif.Decoding
                             Extensions
                                 .OfType<GifApplicationExtension>()
                                 .FirstOrDefault(GifHelpers.IsNetscapeExtension);
+
             if (netscapeExtension != null)
-            {
                 RepeatCount = GifHelpers.GetRepeatCount(netscapeExtension);
-            }
+            else
+                RepeatCount = 1;
         }
 
         private void ReadFrames(Stream stream, bool metadataOnly)

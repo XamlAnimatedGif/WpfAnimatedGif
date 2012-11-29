@@ -60,7 +60,7 @@ namespace WpfAnimatedGif.Decoding
             {
                 return BitConverter.ToUInt16(ext.Data, 1);
             }
-            return ushort.MaxValue;
+            return 1;
         }
 
         public static Exception UnexpectedEndOfStreamException()

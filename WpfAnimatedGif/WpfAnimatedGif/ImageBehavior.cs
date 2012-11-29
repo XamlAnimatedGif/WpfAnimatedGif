@@ -465,7 +465,7 @@ namespace WpfAnimatedGif
                 if (bytes != null && bytes.Length >= 4)
                     return BitConverter.ToUInt16(bytes, 2);
             }
-            return 0;
+            return 1;
         }
 
         private static BitmapMetadata GetApplicationExtension(BitmapDecoder decoder, string application)
