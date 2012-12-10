@@ -3,7 +3,8 @@
   <metadata>
     <id>WpfAnimatedGif</id>
     <title>WPF Animated GIF</title>
-    <version>1.3.5</version>
+    <version>1.4.0-beta1</version>
+    <releaseNotes>Adds support for controlling the animation from code (pause/resume/seek).</releaseNotes>
     <description>A simple library to display animated GIF images in WPF</description>
     <summary>A simple library to display animated GIF images in WPF</summary>
     <authors>Thomas Levesque</authors>
