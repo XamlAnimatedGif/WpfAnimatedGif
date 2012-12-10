@@ -120,25 +120,45 @@ namespace WpfAnimatedGif
                     FrameworkPropertyMetadataOptions.Inherits,
                     AnimateInDesignModeChanged));
 
-        public static bool GetAutoStart(DependencyObject obj)
+        /// <summary>
+        /// Gets the value of the <c>AutoStart</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element from which to read the property value.</param>
+        /// <returns>true if the animation should start immediately when loaded. Otherwise, false.</returns>
+        [AttachedPropertyBrowsableForType(typeof(Image))]
+        public static bool GetAutoStart(Image obj)
         {
             return (bool)obj.GetValue(AutoStartProperty);
         }
 
-        public static void SetAutoStart(DependencyObject obj, bool value)
+        /// <summary>
+        /// Sets the value of the <c>AutoStart</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element from which to read the property value.</param>
+        /// <param name="value">true if the animation should start immediately when loaded. Otherwise, false.</param>
+        /// <remarks>The default value is true.</remarks>
+        public static void SetAutoStart(Image obj, bool value)
         {
             obj.SetValue(AutoStartProperty, value);
         }
 
+        /// <summary>
+        /// Identifies the <c>AutoStart</c> attached property.
+        /// </summary>
         public static readonly DependencyProperty AutoStartProperty =
             DependencyProperty.RegisterAttached("AutoStart", typeof(bool), typeof(ImageBehavior), new PropertyMetadata(true));
 
-        public static ImageAnimationController GetAnimationController(DependencyObject obj)
+        /// <summary>
+        /// Gets the animation controller for the specified <c>Image</c> control.
+        /// </summary>
+        /// <param name="imageControl"></param>
+        /// <returns></returns>
+        public static ImageAnimationController GetAnimationController(Image imageControl)
         {
-            return (ImageAnimationController)obj.GetValue(AnimationControllerPropertyKey.DependencyProperty);
+            return (ImageAnimationController)imageControl.GetValue(AnimationControllerPropertyKey.DependencyProperty);
         }
 
-        public static void SetAnimationController(DependencyObject obj, ImageAnimationController value)
+        private static void SetAnimationController(DependencyObject obj, ImageAnimationController value)
         {
             obj.SetValue(AnimationControllerPropertyKey, value);
         }
@@ -161,7 +181,7 @@ namespace WpfAnimatedGif
         /// </summary>
         /// <param name="d">The UIElement that listens to this event.</param>
         /// <param name="handler">The event handler to be added.</param>
-        public static void AddAnimationCompletedHandler(DependencyObject d, RoutedEventHandler handler)
+        public static void AddAnimationCompletedHandler(Image d, RoutedEventHandler handler)
         {
             var element = d as UIElement;
             if (element == null)
@@ -174,7 +194,7 @@ namespace WpfAnimatedGif
         /// </summary>
         /// <param name="d">The UIElement that listens to this event.</param>
         /// <param name="handler">The event handler to be removed.</param>
-        public static void RemoveAnimationCompletedHandler(DependencyObject d, RoutedEventHandler handler)
+        public static void RemoveAnimationCompletedHandler(Image d, RoutedEventHandler handler)
         {
             var element = d as UIElement;
             if (element == null)
