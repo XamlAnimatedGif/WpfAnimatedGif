@@ -42,7 +42,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Windows.Presentation" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -123,12 +122,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\bomb-once.gif" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\play.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\pause.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

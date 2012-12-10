@@ -61,7 +61,6 @@
     <Compile Include="Decoding\GifLogicalScreenDescriptor.cs" />
     <Compile Include="Decoding\GifPlainTextExtension.cs" />
     <Compile Include="Decoding\GifTrailer.cs" />
-    <Compile Include="ImageAnimationController.cs" />
     <Compile Include="ImageBehavior.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

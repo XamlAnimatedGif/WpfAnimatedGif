@@ -4,7 +4,7 @@
         xmlns:gif="http://wpfanimatedgif.codeplex.com"
         gif:ImageBehavior.AnimateInDesignMode="True"
         WindowStartupLocation="CenterScreen"
-        Title="WPF Animated GIF demo" Height="640" Width="640">
+        Title="WPF Animated GIF demo" Height="500" Width="500">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="boolToVis" />
         <Storyboard x:Key="Blink">
@@ -53,24 +53,9 @@
                     <RadioButton Margin="5" Content="Forever" IsChecked="{Binding RepeatForever}" />
                     <RadioButton Margin="5" Content="Specific count" IsChecked="{Binding UseSpecificRepeatCount}" />
                     <TextBox Margin="5" Text="{Binding RepeatCount}" Width="20" />
-                    <CheckBox Margin="5" Content="Auto start" IsChecked="{Binding AutoStart}" />
                 </StackPanel>
                 
             </Grid>
-        </GroupBox>
-        <GroupBox Header="Control" DockPanel.Dock="Bottom">
-            <DockPanel>
-                <Button Name="btnPlay" ToolTip="Play" Click="btnPlay_Click" Margin="5" IsEnabled="False" DockPanel.Dock="Left">
-                    <Image Source="/Images/play.png" Stretch="None" />
-                </Button>
-                <Button Name="btnPause" ToolTip="Pause" Click="btnPause_Click" Margin="5" IsEnabled="False" DockPanel.Dock="Left">
-                    <Image Source="/Images/pause.png" Stretch="None" />
-                </Button>
-                <Slider Name="sldPosition"
-                        TickFrequency="1" TickPlacement="BottomRight"
-                        Minimum="0" Maximum="9" ValueChanged="sldPosition_ValueChanged" VerticalAlignment="Center" Margin="10" />
-            </DockPanel>
-
         </GroupBox>
         <GroupBox Header="Image">
             <Grid>
@@ -78,8 +63,7 @@
                        Stretch="None"
                        gif:ImageBehavior.AnimatedSource="{Binding SelectedImage}"
                        gif:ImageBehavior.RepeatBehavior="{Binding RepeatBehavior}"
-                       gif:ImageBehavior.AutoStart="{Binding AutoStart}"
-                       gif:ImageBehavior.AnimationCompleted="AnimationCompleted" />
+                       gif:ImageBehavior.AnimationCompleted="AnimationCompleted"/>
 
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top"
                         Visibility="{Binding Completed, Converter={StaticResource boolToVis}}">

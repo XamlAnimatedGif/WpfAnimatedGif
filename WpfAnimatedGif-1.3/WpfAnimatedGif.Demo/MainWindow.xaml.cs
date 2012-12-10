@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media.Animation;
-using System.Windows.Threading;
 using Microsoft.Win32;
 
 namespace WpfAnimatedGif.Demo
@@ -46,7 +43,6 @@ namespace WpfAnimatedGif.Demo
         private void AnimationCompleted(object sender, RoutedEventArgs e)
         {
             Completed = true;
-            SetPlayPauseEnabled(_controller.IsPaused || _controller.IsComplete);
         }
 
         private ObservableCollection<string> _images;
@@ -69,32 +65,6 @@ namespace WpfAnimatedGif.Demo
                 _selectedImage = value;
                 OnPropertyChanged("SelectedImage");
                 Completed = false;
-                Dispatcher.BeginInvoke(ImageChanged, DispatcherPriority.Background);
-            }
-        }
-
-        private void ImageChanged()
-        {
-            if (_controller != null)
-                _controller.CurrentFrameChanged -= ControllerCurrentFrameChanged;
-
-            _controller = ImageBehavior.GetAnimationController(img);
-
-            if (_controller != null)
-            {
-                _controller.CurrentFrameChanged += ControllerCurrentFrameChanged;
-                sldPosition.Value = 0;
-                sldPosition.Maximum = _controller.FrameCount - 1;
-                SetPlayPauseEnabled(_controller.IsPaused || _controller.IsComplete);
-            }
-        }
-
-        private void ControllerCurrentFrameChanged(object sender, EventArgs e)
-        {
-            if (_controller != null)
-            {
-                sldPosition.Value = _controller.CurrentFrame;
-                Debug.WriteLine("ControllerCurrentFrameChanged: {0}", sldPosition.Value);
             }
         }
 
@@ -172,21 +142,8 @@ namespace WpfAnimatedGif.Demo
                 _repeatBehavior = value;
                 OnPropertyChanged("RepeatBehavior");
                 Completed = false;
-                Dispatcher.BeginInvoke(ImageChanged, DispatcherPriority.Background);
             }
         }
-
-        private bool _autoStart = true;
-        public bool AutoStart
-        {
-            get { return _autoStart; }
-            set
-            {
-                _autoStart = value;
-                OnPropertyChanged("AutoStart");
-            }
-        }
-        
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -194,39 +151,6 @@ namespace WpfAnimatedGif.Demo
         {
             PropertyChangedEventHandler handler = PropertyChanged;
             if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        private ImageAnimationController _controller;
-
-        private void btnPause_Click(object sender, RoutedEventArgs e)
-        {
-            if (_controller != null)
-                _controller.Pause();
-            SetPlayPauseEnabled(true);
-        }
-
-        private void btnPlay_Click(object sender, RoutedEventArgs e)
-        {
-            if (_controller != null)
-                _controller.Play();
-            Completed = false;
-            SetPlayPauseEnabled(false);
-        }
-
-        private void sldPosition_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (_controller != null)
-            {
-                var currentFrame = _controller.CurrentFrame;
-                if (currentFrame >= 0 && currentFrame != (int)sldPosition.Value)
-                    _controller.GotoFrame((int)sldPosition.Value);
-            }
-        }
-
-        private void SetPlayPauseEnabled(bool isPaused)
-        {
-            btnPause.IsEnabled = !isPaused;
-            btnPlay.IsEnabled = isPaused;
         }
     }
 }

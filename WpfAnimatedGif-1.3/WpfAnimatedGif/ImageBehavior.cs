@@ -19,8 +19,6 @@ namespace WpfAnimatedGif
     /// </summary>
     public static class ImageBehavior
     {
-        #region Public attached properties and events
-
         /// <summary>
         /// Gets the value of the <c>AnimatedSource</c> attached property for the specified object.
         /// </summary>
@@ -120,32 +118,6 @@ namespace WpfAnimatedGif
                     FrameworkPropertyMetadataOptions.Inherits,
                     AnimateInDesignModeChanged));
 
-        public static bool GetAutoStart(DependencyObject obj)
-        {
-            return (bool)obj.GetValue(AutoStartProperty);
-        }
-
-        public static void SetAutoStart(DependencyObject obj, bool value)
-        {
-            obj.SetValue(AutoStartProperty, value);
-        }
-
-        public static readonly DependencyProperty AutoStartProperty =
-            DependencyProperty.RegisterAttached("AutoStart", typeof(bool), typeof(ImageBehavior), new PropertyMetadata(true));
-
-        public static ImageAnimationController GetAnimationController(DependencyObject obj)
-        {
-            return (ImageAnimationController)obj.GetValue(AnimationControllerPropertyKey.DependencyProperty);
-        }
-
-        public static void SetAnimationController(DependencyObject obj, ImageAnimationController value)
-        {
-            obj.SetValue(AnimationControllerPropertyKey, value);
-        }
-
-        private static readonly DependencyPropertyKey AnimationControllerPropertyKey =
-            DependencyProperty.RegisterAttachedReadOnly("AnimationController", typeof(ImageAnimationController), typeof(ImageBehavior), new PropertyMetadata(null));
-
         /// <summary>
         /// Identifies the <c>AnimationCompleted</c> attached event.
         /// </summary>
@@ -181,8 +153,6 @@ namespace WpfAnimatedGif
                 return;
             element.RemoveHandler(AnimationCompletedEvent, handler);
         }
-
-        #endregion
 
         private static void AnimatedSourceChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
@@ -233,11 +203,6 @@ namespace WpfAnimatedGif
 
         private static void InitAnimationOrImage(Image imageControl)
         {
-            var controller = GetAnimationController(imageControl);
-            if (controller != null)
-                controller.Dispose();
-            SetAnimationController(imageControl, null);
-
             BitmapSource source = GetAnimatedSource(imageControl) as BitmapSource;
             bool isInDesignMode = DesignerProperties.GetIsInDesignMode(imageControl);
             bool animateInDesignMode = GetAnimateInDesignMode(imageControl);
@@ -305,10 +270,7 @@ namespace WpfAnimatedGif
                     {
                         imageControl.Source = decoder.Frames[0];
                     }
-
-                    controller = new ImageAnimationController(imageControl, animation, GetAutoStart(imageControl));
-                    SetAnimationController(imageControl, controller);
-
+                    imageControl.BeginAnimation(Image.SourceProperty, animation);
                     return;
                 }
             }
@@ -471,6 +433,7 @@ namespace WpfAnimatedGif
                 bitmap.Freeze();
             return bitmap;
         }
+
 
         private static RepeatBehavior GetActualRepeatBehavior(Image imageControl, BitmapDecoder decoder, GifFile gifMetadata)
         {
