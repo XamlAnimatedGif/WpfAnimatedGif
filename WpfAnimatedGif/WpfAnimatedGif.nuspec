@@ -4,7 +4,6 @@
     <id>WpfAnimatedGif</id>
     <title>WPF Animated GIF</title>
     <version>1.4.0-beta1</version>
-    <releaseNotes>Adds support for controlling the animation from code (pause/resume/seek).</releaseNotes>
     <description>A simple library to display animated GIF images in WPF</description>
     <summary>A simple library to display animated GIF images in WPF</summary>
     <authors>Thomas Levesque</authors>
@@ -12,7 +11,7 @@
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
     <projectUrl>http://wpfanimatedgif.codeplex.com/</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <releaseNotes>Added AnimationCompleted attached event.</releaseNotes>
+    <releaseNotes>Added support for controlling the animation from code (pause/resume/seek).</releaseNotes>
     <copyright>Copyright 2012</copyright>
     <tags>wpf animated gif</tags>
     <frameworkAssemblies>
