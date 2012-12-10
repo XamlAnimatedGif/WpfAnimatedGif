@@ -1,0 +1,86 @@
+﻿<Window x:Class="WpfAnimatedGif.Demo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:gif="http://wpfanimatedgif.codeplex.com"
+        gif:ImageBehavior.AnimateInDesignMode="True"
+        WindowStartupLocation="CenterScreen"
+        Title="WPF Animated GIF demo" Height="500" Width="500">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="boolToVis" />
+        <Storyboard x:Key="Blink">
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" RepeatBehavior="Forever" Duration="0:0:1">
+                <DiscreteObjectKeyFrame KeyTime="0:0:0">
+                    <DiscreteObjectKeyFrame.Value>
+                        <Visibility>Visible</Visibility>
+                    </DiscreteObjectKeyFrame.Value>
+                </DiscreteObjectKeyFrame>
+                <DiscreteObjectKeyFrame KeyTime="0:0:0.5">
+                    <DiscreteObjectKeyFrame.Value>
+                        <Visibility>Hidden</Visibility>
+                    </DiscreteObjectKeyFrame.Value>
+                </DiscreteObjectKeyFrame>
+            </ObjectAnimationUsingKeyFrames>
+        </Storyboard>
+    </Window.Resources>
+    <DockPanel>
+        <GroupBox Header="Options" DockPanel.Dock="Top">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                
+                <Label Content="Image" />
+                
+                <ComboBox Grid.Column="1" Margin="5"
+                          ItemsSource="{Binding Images}"
+                          SelectedItem="{Binding SelectedImage}" />
+
+                <Button Grid.Column="2"
+                        Content="Pick an image..."
+                        Margin="5"
+                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                        Click="Button_Click"/>
+
+                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                            Orientation="Horizontal">
+                    <RadioButton Margin="5" Content="Default" IsChecked="{Binding UseDefaultRepeatBehavior}" />
+                    <RadioButton Margin="5" Content="Forever" IsChecked="{Binding RepeatForever}" />
+                    <RadioButton Margin="5" Content="Specific count" IsChecked="{Binding UseSpecificRepeatCount}" />
+                    <TextBox Margin="5" Text="{Binding RepeatCount}" Width="20" />
+                </StackPanel>
+                
+            </Grid>
+        </GroupBox>
+        <GroupBox Header="Image">
+            <Grid>
+                <Image Name="img" Margin="5"
+                       Stretch="None"
+                       gif:ImageBehavior.AnimatedSource="{Binding SelectedImage}"
+                       gif:ImageBehavior.RepeatBehavior="{Binding RepeatBehavior}"
+                       gif:ImageBehavior.AnimationCompleted="AnimationCompleted"/>
+
+                <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Visibility="{Binding Completed, Converter={StaticResource boolToVis}}">
+                    <Label Content="Completed">
+                        <Label.Style>
+                            <Style TargetType="Label">
+                                <Style.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard Storyboard="{StaticResource Blink}" />
+                                    </EventTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Label.Style>
+                    </Label>
+                </Border>
+            </Grid>
+        </GroupBox>
+        
+    </DockPanel>
+</Window>
