@@ -3,7 +3,7 @@
   <metadata>
     <id>WpfAnimatedGif</id>
     <title>WPF Animated GIF</title>
-    <version>1.3.5</version>
+    <version>1.3.6</version>
     <description>A simple library to display animated GIF images in WPF</description>
     <summary>A simple library to display animated GIF images in WPF</summary>
     <authors>Thomas Levesque</authors>
@@ -11,7 +11,7 @@
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
     <projectUrl>http://wpfanimatedgif.codeplex.com/</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <releaseNotes>Added AnimationCompleted attached event.</releaseNotes>
+    <releaseNotes>Fixed issue #1399 (siteoforigin Pack Uri not working)</releaseNotes>
     <copyright>Copyright 2012</copyright>
     <tags>wpf animated gif</tags>
     <frameworkAssemblies>

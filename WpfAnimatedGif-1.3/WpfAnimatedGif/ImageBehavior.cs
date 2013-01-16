@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using System.Windows.Resources;
 using WpfAnimatedGif.Decoding;
 
 namespace WpfAnimatedGif
@@ -378,7 +379,12 @@ namespace WpfAnimatedGif
             Stream stream = null;
             if (uri.Scheme == PackUriHelper.UriSchemePack)
             {
-                var sri = Application.GetResourceStream(uri);
+                StreamResourceInfo sri;
+                if (uri.Authority == "siteoforigin:,,,")
+                    sri = Application.GetRemoteStream(uri);
+                else
+                    sri = Application.GetResourceStream(uri);
+
                 if (sri != null)
                     stream = sri.Stream;
             }
