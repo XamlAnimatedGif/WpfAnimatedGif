@@ -17,7 +17,7 @@ using System.Windows.Markup;
 
 [assembly: AssemblyVersion("1.4.0.0")]
 [assembly: AssemblyFileVersion("1.4.0.0")]
-[assembly: AssemblyInformationalVersion("1.4.0-beta1")]
+[assembly: AssemblyInformationalVersion("1.4.0")]
 
 [assembly: XmlnsDefinition("http://wpfanimatedgif.codeplex.com", "WpfAnimatedGif")]
 [assembly: XmlnsPrefix("http://wpfanimatedgif.codeplex.com", "gif")]
