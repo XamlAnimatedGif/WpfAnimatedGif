@@ -3,7 +3,7 @@
   <metadata>
     <id>WpfAnimatedGif</id>
     <title>WPF Animated GIF</title>
-    <version>1.4.0</version>
+    <version>1.4.1</version>
     <description>A simple library to display animated GIF images in WPF</description>
     <summary>A simple library to display animated GIF images in WPF</summary>
     <authors>Thomas Levesque</authors>
@@ -12,8 +12,8 @@
     <projectUrl>http://wpfanimatedgif.codeplex.com/</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes>
-      Added support for controlling the animation from code (pause/resume/seek).
-      Fixed issue #1399 (siteoforigin Pack Uri not working)
+      Fixed issue #1444 (AnimationCompleted is still raised after the image has been removed)
+      Fixed issue #1445 (GIF image loaded from a remote URL is not animated)
     </releaseNotes>
     <copyright>Copyright 2013</copyright>
     <tags>wpf animated gif</tags>

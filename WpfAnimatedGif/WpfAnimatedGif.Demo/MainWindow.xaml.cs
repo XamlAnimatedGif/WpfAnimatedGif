@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using Microsoft.VisualBasic;
 using Microsoft.Win32;
 
 namespace WpfAnimatedGif.Demo
@@ -25,20 +26,18 @@ namespace WpfAnimatedGif.Demo
                           "pack://application:,,,/images/bomb.gif",
                           "pack://application:,,,/images/bomb-once.gif",
                           "pack://application:,,,/images/nonanimated.png",
-                          "pack://siteoforigin:,,,/images/siteoforigin.gif"
+                          "pack://siteoforigin:,,,/images/siteoforigin.gif",
+                          "http://i.imgur.com/rCK6xzh.gif"
                       };
             DataContext = this;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void btnOpenFile_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new OpenFileDialog();
             dlg.Filter = "GIF images|*.gif";
             if (dlg.ShowDialog() == true)
             {
-                //var converter = new ImageSourceConverter();
-                //var imgSource = (ImageSource) converter.ConvertFrom(dlg.FileName);
-                //ImageBehavior.SetAnimatedSource(img, imgSource);
                 Images.Add(dlg.FileName);
                 SelectedImage = dlg.FileName;
             }
@@ -47,7 +46,8 @@ namespace WpfAnimatedGif.Demo
         private void AnimationCompleted(object sender, RoutedEventArgs e)
         {
             Completed = true;
-            SetPlayPauseEnabled(_controller.IsPaused || _controller.IsComplete);
+            if (_controller != null)
+                SetPlayPauseEnabled(_controller.IsPaused || _controller.IsComplete);
         }
 
         private ObservableCollection<string> _images;
@@ -228,6 +228,16 @@ namespace WpfAnimatedGif.Demo
         {
             btnPause.IsEnabled = !isPaused;
             btnPlay.IsEnabled = isPaused;
+        }
+
+        private void btnOpenUrl_Click(object sender, RoutedEventArgs e)
+        {
+            string url = Interaction.InputBox("Enter the URL of the image to load", "Enter URL");
+            if (!string.IsNullOrEmpty(url))
+            {
+                Images.Add(url);
+                SelectedImage = url;
+            }
         }
     }
 }

@@ -267,9 +267,23 @@ namespace WpfAnimatedGif
             // For a BitmapImage with a relative UriSource, the loading is deferred until
             // BaseUri is set. This method will be called again when BaseUri is set.
             bool isLoadingDeferred = IsLoadingDeferred(source);
-            
+
             if (source != null && shouldAnimate && !isLoadingDeferred)
             {
+                // Case of image being downloaded: retry after download is complete
+                if (source.IsDownloading)
+                {
+                    EventHandler handler = null;
+                    handler = (sender, args) =>
+                    {
+                        source.DownloadCompleted -= handler;
+                        InitAnimationOrImage(imageControl);
+                    };
+                    source.DownloadCompleted += handler;
+                    imageControl.Source = source;
+                    return;
+                }
+
                 GifFile gifMetadata;
                 var decoder = GetDecoder(source, out gifMetadata) as GifBitmapDecoder;
                 if (decoder != null && decoder.Frames.Count > 1)
@@ -308,14 +322,6 @@ namespace WpfAnimatedGif
                     animation.Duration = totalDuration;
                     
                     animation.RepeatBehavior = GetActualRepeatBehavior(imageControl, decoder, gifMetadata);
-
-                    animation.Completed += delegate
-                    {
-                        imageControl.RaiseEvent(
-                            new RoutedEventArgs(AnimationCompletedEvent, imageControl));
-                    };
-
-                    animation.Freeze();
 
                     if (animation.KeyFrames.Count > 0)
                     {

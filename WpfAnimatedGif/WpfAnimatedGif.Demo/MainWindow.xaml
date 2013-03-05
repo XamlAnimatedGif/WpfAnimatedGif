@@ -39,13 +39,23 @@
                 
                 <ComboBox Grid.Column="1" Margin="5"
                           ItemsSource="{Binding Images}"
-                          SelectedItem="{Binding SelectedImage}" />
+                          SelectedItem="{Binding SelectedImage}"
+                          VerticalAlignment="Top" />
 
-                <Button Grid.Column="2"
-                        Content="Pick an image..."
-                        Margin="5"
-                        HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                        Click="Button_Click"/>
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Button Name="btnOpenFile" Grid.Row="0"
+                            Content="Open file..."
+                            Margin="5"
+                            Click="btnOpenFile_Click"/>
+                    <Button Name="btnOpenUrl" Grid.Row="1"
+                            Content="Open URL..."
+                            Margin="5,0,5,5"
+                            Click="btnOpenUrl_Click"/>
+                </Grid>
 
                 <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                             Orientation="Horizontal">

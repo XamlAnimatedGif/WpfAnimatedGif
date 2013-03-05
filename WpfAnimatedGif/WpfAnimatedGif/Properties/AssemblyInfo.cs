@@ -15,9 +15,9 @@ using System.Windows.Markup;
 
 [assembly: Guid("a985ebe7-753b-4d73-b363-4b63d87f98b7")]
 
-[assembly: AssemblyVersion("1.4.0.0")]
-[assembly: AssemblyFileVersion("1.4.0.0")]
-[assembly: AssemblyInformationalVersion("1.4.0")]
+[assembly: AssemblyVersion("1.4.1.0")]
+[assembly: AssemblyFileVersion("1.4.1.0")]
+[assembly: AssemblyInformationalVersion("1.4.1")]
 
 [assembly: XmlnsDefinition("http://wpfanimatedgif.codeplex.com", "WpfAnimatedGif")]
 [assembly: XmlnsPrefix("http://wpfanimatedgif.codeplex.com", "gif")]

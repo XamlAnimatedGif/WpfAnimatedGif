@@ -27,6 +27,7 @@ namespace WpfAnimatedGif
         {
             _image = image;
             _animation = animation;
+            _animation.Completed += AnimationCompleted;
             _clock = _animation.CreateClock();
             _clockController = _clock.Controller;
             _sourceDescriptor.AddValueChanged(image, ImageSourceChanged);
@@ -39,6 +40,11 @@ namespace WpfAnimatedGif
             
             if (autoStart)
                 _clockController.Resume();
+        }
+
+        void AnimationCompleted(object sender, EventArgs e)
+        {
+            _image.RaiseEvent(new System.Windows.RoutedEventArgs(ImageBehavior.AnimationCompletedEvent, _image));
         }
 
         private void ImageSourceChanged(object sender, EventArgs e)
@@ -142,6 +148,7 @@ namespace WpfAnimatedGif
         /// </summary>
         public void Dispose()
         {
+            _animation.Completed -= AnimationCompleted;
             _sourceDescriptor.RemoveValueChanged(_image, ImageSourceChanged);
         }
     }
