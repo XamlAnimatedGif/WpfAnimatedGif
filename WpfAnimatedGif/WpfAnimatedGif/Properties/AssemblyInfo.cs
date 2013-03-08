@@ -15,9 +15,19 @@ using System.Windows.Markup;
 
 [assembly: Guid("a985ebe7-753b-4d73-b363-4b63d87f98b7")]
 
-[assembly: AssemblyVersion("1.4.1.0")]
-[assembly: AssemblyFileVersion("1.4.1.0")]
-[assembly: AssemblyInformationalVersion("1.4.1")]
+[assembly: AssemblyVersion(VersionInfo.VersionString)]
+[assembly: AssemblyFileVersion(VersionInfo.VersionString)]
+[assembly: AssemblyInformationalVersion(VersionInfo.VersionString)]
 
 [assembly: XmlnsDefinition("http://wpfanimatedgif.codeplex.com", "WpfAnimatedGif")]
 [assembly: XmlnsPrefix("http://wpfanimatedgif.codeplex.com", "gif")]
+
+// ReSharper disable CheckNamespace
+class VersionInfo
+{
+    /// <summary>
+    /// Single place to define version
+    /// </summary>
+    public const string VersionString = "1.4.2";
+}
+// ReSharper restore CheckNamespace

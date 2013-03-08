@@ -297,7 +297,6 @@ namespace WpfAnimatedGif
                         var metadata = GetFrameMetadata(decoder, gifMetadata, index);
 
                         var frame = MakeFrame(source, rawFrame, metadata, baseFrame);
-
                         var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
                         animation.KeyFrames.Add(keyFrame);
                         
@@ -310,7 +309,14 @@ namespace WpfAnimatedGif
                                 baseFrame = frame;
                                 break;
                             case FrameDisposalMethod.RestoreBackground:
-                                baseFrame = null;
+                                if (IsFullFrame(metadata, source))
+                                {
+                                    baseFrame = null;
+                                }
+                                else
+                                {
+                                    baseFrame = ClearArea(frame, metadata);
+                                }
                                 break;
                             case FrameDisposalMethod.RestorePrevious:
                                 // Reuse same base frame
@@ -340,6 +346,33 @@ namespace WpfAnimatedGif
                 }
             }
             imageControl.Source = source;
+        }
+
+        private static BitmapSource ClearArea(BitmapSource frame, FrameMetadata metadata)
+        {
+            DrawingVisual visual = new DrawingVisual();
+            using (var context = visual.RenderOpen())
+            {
+                var fullRect = new Rect(0, 0, frame.PixelWidth, frame.PixelHeight);
+                var clearRect = new Rect(metadata.Left, metadata.Top, metadata.Width, metadata.Height);
+                var clip = Geometry.Combine(
+                    new RectangleGeometry(fullRect),
+                    new RectangleGeometry(clearRect),
+                    GeometryCombineMode.Exclude,
+                    null);
+                context.PushClip(clip);
+                context.DrawImage(frame, fullRect);
+            }
+
+            var bitmap = new RenderTargetBitmap(
+                    frame.PixelWidth, frame.PixelHeight,
+                    frame.DpiX, frame.DpiY,
+                    PixelFormats.Pbgra32);
+            bitmap.Render(visual);
+
+            if (bitmap.CanFreeze && !bitmap.IsFrozen)
+                bitmap.Freeze();
+            return bitmap;
         }
 
         private static void TryTwice(Action action)
@@ -467,14 +500,20 @@ namespace WpfAnimatedGif
             return null;
         }
 
+        private static bool IsFullFrame(FrameMetadata metadata, BitmapSource fullImage)
+        {
+            return metadata.Left == 0
+                   && metadata.Top == 0
+                   && metadata.Width == fullImage.PixelWidth
+                   && metadata.Height == fullImage.PixelHeight;
+        }
+
         private static BitmapSource MakeFrame(
             BitmapSource fullImage,
             BitmapSource rawFrame, FrameMetadata metadata,
             BitmapSource baseFrame)
         {
-            if (baseFrame == null
-                && rawFrame.PixelWidth == fullImage.PixelWidth
-                && rawFrame.PixelHeight == fullImage.PixelHeight)
+            if (baseFrame == null && IsFullFrame(metadata, fullImage))
             {
                 // No previous image to combine with, and same size as the full image
                 // Just return the frame as is
@@ -577,10 +616,10 @@ namespace WpfAnimatedGif
             var disposalMethod = (FrameDisposalMethod) metadata.GetQueryOrDefault("/grctlext/Disposal", 0);
             var frameMetadata = new FrameMetadata
                                 {
-                                    Left = metadata.GetQueryOrDefault("/imgdesc/Left", 0.0),
-                                    Top = metadata.GetQueryOrDefault("/imgdesc/Top", 0.0),
-                                    Width = metadata.GetQueryOrDefault("/imgdesc/Width", frame.Width),
-                                    Height = metadata.GetQueryOrDefault("/imgdesc/Height", frame.Height),
+                                    Left = metadata.GetQueryOrDefault("/imgdesc/Left", 0),
+                                    Top = metadata.GetQueryOrDefault("/imgdesc/Top", 0),
+                                    Width = metadata.GetQueryOrDefault("/imgdesc/Width", frame.PixelWidth),
+                                    Height = metadata.GetQueryOrDefault("/imgdesc/Height", frame.PixelHeight),
                                     Delay = delay,
                                     DisposalMethod = disposalMethod
                                 };
@@ -612,10 +651,10 @@ namespace WpfAnimatedGif
 
         private class FrameMetadata
         {
-            public double Left { get; set; }
-            public double Top { get; set; }
-            public double Width { get; set; }
-            public double Height { get; set; }
+            public int Left { get; set; }
+            public int Top { get; set; }
+            public int Width { get; set; }
+            public int Height { get; set; }
             public TimeSpan Delay { get; set; }
             public FrameDisposalMethod DisposalMethod { get; set; }
         }
@@ -661,5 +700,16 @@ namespace WpfAnimatedGif
                 return metadata.GetQuery(query) as T;
             return null;
         }
+
+        // For debug purposes
+        //private static void Save(BitmapSource image, string path)
+        //{
+        //    var encoder = new PngBitmapEncoder();
+        //    encoder.Frames.Add(BitmapFrame.Create(image));
+        //    using (var stream = File.OpenWrite(path))
+        //    {
+        //        encoder.Save(stream);
+        //    }
+        //}
     }
 }
