@@ -288,6 +288,7 @@ namespace WpfAnimatedGif
                 var decoder = GetDecoder(source, out gifMetadata) as GifBitmapDecoder;
                 if (decoder != null && decoder.Frames.Count > 1)
                 {
+                    var fullSize = GetFullSize(decoder);
                     int index = 0;
                     var animation = new ObjectAnimationUsingKeyFrames();
                     var totalDuration = TimeSpan.Zero;
@@ -296,7 +297,7 @@ namespace WpfAnimatedGif
                     {
                         var metadata = GetFrameMetadata(decoder, gifMetadata, index);
 
-                        var frame = MakeFrame(source, rawFrame, metadata, baseFrame);
+                        var frame = MakeFrame(fullSize, rawFrame, metadata, baseFrame);
                         var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
                         animation.KeyFrames.Add(keyFrame);
                         
@@ -309,7 +310,7 @@ namespace WpfAnimatedGif
                                 baseFrame = frame;
                                 break;
                             case FrameDisposalMethod.RestoreBackground:
-                                if (IsFullFrame(metadata, source))
+                                if (IsFullFrame(metadata, fullSize))
                                 {
                                     baseFrame = null;
                                 }
@@ -500,20 +501,20 @@ namespace WpfAnimatedGif
             return null;
         }
 
-        private static bool IsFullFrame(FrameMetadata metadata, BitmapSource fullImage)
+        private static bool IsFullFrame(FrameMetadata metadata, Int32Size fullSize)
         {
             return metadata.Left == 0
                    && metadata.Top == 0
-                   && metadata.Width == fullImage.PixelWidth
-                   && metadata.Height == fullImage.PixelHeight;
+                   && metadata.Width == fullSize.Width
+                   && metadata.Height == fullSize.Height;
         }
 
         private static BitmapSource MakeFrame(
-            BitmapSource fullImage,
+            Int32Size fullSize,
             BitmapSource rawFrame, FrameMetadata metadata,
             BitmapSource baseFrame)
         {
-            if (baseFrame == null && IsFullFrame(metadata, fullImage))
+            if (baseFrame == null && IsFullFrame(metadata, fullSize))
             {
                 // No previous image to combine with, and same size as the full image
                 // Just return the frame as is
@@ -525,7 +526,7 @@ namespace WpfAnimatedGif
             {
                 if (baseFrame != null)
                 {
-                    var fullRect = new Rect(0, 0, fullImage.PixelWidth, fullImage.PixelHeight);
+                    var fullRect = new Rect(0, 0, fullSize.Width, fullSize.Height);
                     context.DrawImage(baseFrame, fullRect);
                 }
 
@@ -533,8 +534,8 @@ namespace WpfAnimatedGif
                 context.DrawImage(rawFrame, rect);
             }
             var bitmap = new RenderTargetBitmap(
-                fullImage.PixelWidth, fullImage.PixelHeight,
-                fullImage.DpiX, fullImage.DpiY,
+                fullSize.Width, fullSize.Height,
+                96, 96,
                 PixelFormats.Pbgra32);
             bitmap.Render(visual);
 
@@ -647,6 +648,25 @@ namespace WpfAnimatedGif
                 frameMetadata.DisposalMethod = (FrameDisposalMethod) gce.DisposalMethod;
             }
             return frameMetadata;
+        }
+
+        private static Int32Size GetFullSize(BitmapDecoder decoder)
+        {
+            int width = decoder.Metadata.GetQueryOrDefault("/logscrdesc/Width", 0);
+            int height = decoder.Metadata.GetQueryOrDefault("/logscrdesc/Height", 0);
+            return new Int32Size(width, height);
+        }
+
+        private struct Int32Size
+        {
+            public Int32Size(int width, int height) : this()
+            {
+                Width = width;
+                Height = height;
+            }
+
+            public int Width { get; private set; }
+            public int Height { get; private set; }
         }
 
         private class FrameMetadata

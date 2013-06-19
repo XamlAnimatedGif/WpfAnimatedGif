@@ -132,6 +132,7 @@
     <Resource Include="Images\pause.png" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Images\partialfirstframe.gif" />
     <Resource Include="Images\monster.gif" />
     <Content Include="Images\siteoforigin.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

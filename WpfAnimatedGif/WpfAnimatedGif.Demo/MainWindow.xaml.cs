@@ -28,6 +28,7 @@ namespace WpfAnimatedGif.Demo
                           "pack://application:,,,/images/nonanimated.png",
                           "pack://application:,,,/images/monster.gif",
                           "pack://siteoforigin:,,,/images/siteoforigin.gif",
+                          "pack://application:,,,/images/partialfirstframe.gif",
                           "http://i.imgur.com/rCK6xzh.gif"
                       };
             DataContext = this;
@@ -239,6 +240,11 @@ namespace WpfAnimatedGif.Demo
                 Images.Add(url);
                 SelectedImage = url;
             }
+        }
+
+        private void btnGC_Click(object sender, RoutedEventArgs e)
+        {
+            GC.Collect();
         }
     }
 }

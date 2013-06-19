@@ -3,7 +3,7 @@
   <metadata>
     <id>WpfAnimatedGif</id>
     <title>WPF Animated GIF</title>
-    <version>1.4.2</version>
+    <version>1.4.3</version>
     <description>A simple library to display animated GIF images in WPF</description>
     <summary>A simple library to display animated GIF images in WPF</summary>
     <authors>Thomas Levesque</authors>
@@ -12,7 +12,7 @@
     <projectUrl>http://wpfanimatedgif.codeplex.com/</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes>
-      Fixed issue #1453 (Partial frame with Disposal method = 2 (restore background) can cause incorrect display of next frame)
+      Fixed issue #1577 (Image fails to render if first frame is not a full frame)
     </releaseNotes>
     <copyright>Copyright 2013</copyright>
     <tags>wpf animated gif</tags>

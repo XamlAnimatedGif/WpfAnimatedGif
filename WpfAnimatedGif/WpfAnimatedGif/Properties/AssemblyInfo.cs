@@ -28,6 +28,6 @@ class VersionInfo
     /// <summary>
     /// Single place to define version
     /// </summary>
-    public const string VersionString = "1.4.2";
+    public const string VersionString = "1.4.3";
 }
 // ReSharper restore CheckNamespace
