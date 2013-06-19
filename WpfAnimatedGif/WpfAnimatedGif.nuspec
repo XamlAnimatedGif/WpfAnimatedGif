@@ -3,7 +3,7 @@
   <metadata>
     <id>WpfAnimatedGif</id>
     <title>WPF Animated GIF</title>
-    <version>1.4.3</version>
+    <version>1.4.4</version>
     <description>A simple library to display animated GIF images in WPF</description>
     <summary>A simple library to display animated GIF images in WPF</summary>
     <authors>Thomas Levesque</authors>

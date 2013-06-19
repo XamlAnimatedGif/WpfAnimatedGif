@@ -288,7 +288,7 @@ namespace WpfAnimatedGif
                 var decoder = GetDecoder(source, out gifMetadata) as GifBitmapDecoder;
                 if (decoder != null && decoder.Frames.Count > 1)
                 {
-                    var fullSize = GetFullSize(decoder);
+                    var fullSize = GetFullSize(decoder, gifMetadata);
                     int index = 0;
                     var animation = new ObjectAnimationUsingKeyFrames();
                     var totalDuration = TimeSpan.Zero;
@@ -650,8 +650,13 @@ namespace WpfAnimatedGif
             return frameMetadata;
         }
 
-        private static Int32Size GetFullSize(BitmapDecoder decoder)
+        private static Int32Size GetFullSize(BitmapDecoder decoder, GifFile gifMetadata)
         {
+            if (gifMetadata != null)
+            {
+                var lsd = gifMetadata.Header.LogicalScreenDescriptor;
+                return new Int32Size(lsd.Width, lsd.Height);
+            }
             int width = decoder.Metadata.GetQueryOrDefault("/logscrdesc/Width", 0);
             int height = decoder.Metadata.GetQueryOrDefault("/logscrdesc/Height", 0);
             return new Int32Size(width, height);
