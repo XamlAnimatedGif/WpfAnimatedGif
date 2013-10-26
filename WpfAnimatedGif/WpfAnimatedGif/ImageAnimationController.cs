@@ -23,12 +23,12 @@ namespace WpfAnimatedGif
         private readonly AnimationClock _clock;
         private readonly ClockController _clockController;
         
-        internal ImageAnimationController(Image image, ObjectAnimationUsingKeyFrames animation, bool autoStart)
+        internal ImageAnimationController(Image image, ObjectAnimationUsingKeyFrames animation, AnimationClock clock)
         {
             _image = image;
             _animation = animation;
             _animation.Completed += AnimationCompleted;
-            _clock = _animation.CreateClock();
+            _clock = clock;
             _clockController = _clock.Controller;
             _sourceDescriptor.AddValueChanged(image, ImageSourceChanged);
 
@@ -38,7 +38,7 @@ namespace WpfAnimatedGif
             
             _image.ApplyAnimationClock(Image.SourceProperty, _clock);
             
-            if (autoStart)
+            if (ImageBehavior.GetAutoStart(image))
                 _clockController.Resume();
         }
 
@@ -148,6 +148,7 @@ namespace WpfAnimatedGif
         /// </summary>
         public void Dispose()
         {
+            _image.BeginAnimation(Image.SourceProperty, null);
             _animation.Completed -= AnimationCompleted;
             _sourceDescriptor.RemoveValueChanged(_image, ImageSourceChanged);
         }

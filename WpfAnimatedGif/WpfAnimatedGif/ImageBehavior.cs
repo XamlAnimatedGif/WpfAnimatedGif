@@ -25,22 +25,22 @@ namespace WpfAnimatedGif
         /// <summary>
         /// Gets the value of the <c>AnimatedSource</c> attached property for the specified object.
         /// </summary>
-        /// <param name="obj">The element from which to read the property value.</param>
+        /// <param name="image">The element from which to read the property value.</param>
         /// <returns>The currently displayed animated image.</returns>
         [AttachedPropertyBrowsableForType(typeof(Image))]
-        public static ImageSource GetAnimatedSource(Image obj)
+        public static ImageSource GetAnimatedSource(Image image)
         {
-            return (ImageSource)obj.GetValue(AnimatedSourceProperty);
+            return (ImageSource)image.GetValue(AnimatedSourceProperty);
         }
 
         /// <summary>
         /// Sets the value of the <c>AnimatedSource</c> attached property for the specified object.
         /// </summary>
-        /// <param name="obj">The element on which to set the property value.</param>
+        /// <param name="image">The element on which to set the property value.</param>
         /// <param name="value">The animated image to display.</param>
-        public static void SetAnimatedSource(Image obj, ImageSource value)
+        public static void SetAnimatedSource(Image image, ImageSource value)
         {
-            obj.SetValue(AnimatedSourceProperty, value);
+            image.SetValue(AnimatedSourceProperty, value);
         }
 
         /// <summary>
@@ -58,22 +58,22 @@ namespace WpfAnimatedGif
         /// <summary>
         /// Gets the value of the <c>RepeatBehavior</c> attached property for the specified object.
         /// </summary>
-        /// <param name="obj">The element from which to read the property value.</param>
+        /// <param name="image">The element from which to read the property value.</param>
         /// <returns>The repeat behavior of the animated image.</returns>
         [AttachedPropertyBrowsableForType(typeof(Image))]
-        public static RepeatBehavior GetRepeatBehavior(Image obj)
+        public static RepeatBehavior GetRepeatBehavior(Image image)
         {
-            return (RepeatBehavior)obj.GetValue(RepeatBehaviorProperty);
+            return (RepeatBehavior)image.GetValue(RepeatBehaviorProperty);
         }
 
         /// <summary>
         /// Sets the value of the <c>RepeatBehavior</c> attached property for the specified object.
         /// </summary>
-        /// <param name="obj">The element on which to set the property value.</param>
+        /// <param name="image">The element on which to set the property value.</param>
         /// <param name="value">The repeat behavior of the animated image.</param>
-        public static void SetRepeatBehavior(Image obj, RepeatBehavior value)
+        public static void SetRepeatBehavior(Image image, RepeatBehavior value)
         {
-            obj.SetValue(RepeatBehaviorProperty, value);
+            image.SetValue(RepeatBehaviorProperty, value);
         }
 
         /// <summary>
@@ -124,23 +124,23 @@ namespace WpfAnimatedGif
         /// <summary>
         /// Gets the value of the <c>AutoStart</c> attached property for the specified object.
         /// </summary>
-        /// <param name="obj">The element from which to read the property value.</param>
+        /// <param name="image">The element from which to read the property value.</param>
         /// <returns>true if the animation should start immediately when loaded. Otherwise, false.</returns>
         [AttachedPropertyBrowsableForType(typeof(Image))]
-        public static bool GetAutoStart(Image obj)
+        public static bool GetAutoStart(Image image)
         {
-            return (bool)obj.GetValue(AutoStartProperty);
+            return (bool)image.GetValue(AutoStartProperty);
         }
 
         /// <summary>
         /// Sets the value of the <c>AutoStart</c> attached property for the specified object.
         /// </summary>
-        /// <param name="obj">The element from which to read the property value.</param>
+        /// <param name="image">The element on which to set the property value.</param>
         /// <param name="value">true if the animation should start immediately when loaded. Otherwise, false.</param>
         /// <remarks>The default value is true.</remarks>
-        public static void SetAutoStart(Image obj, bool value)
+        public static void SetAutoStart(Image image, bool value)
         {
-            obj.SetValue(AutoStartProperty, value);
+            image.SetValue(AutoStartProperty, value);
         }
 
         /// <summary>
@@ -166,6 +166,41 @@ namespace WpfAnimatedGif
 
         private static readonly DependencyPropertyKey AnimationControllerPropertyKey =
             DependencyProperty.RegisterAttachedReadOnly("AnimationController", typeof(ImageAnimationController), typeof(ImageBehavior), new PropertyMetadata(null));
+
+        /// <summary>
+        /// Gets the value of the <c>SynchronizedBySource</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="image">The element from which to read the property value.</param>
+        /// <returns>true if the animation should be synchronized across all images that have the
+        /// same <c>AnimatedSource</c> and <c>RepeatBehavior</c>. Otherwise, false.</returns>
+        [AttachedPropertyBrowsableForType(typeof(Image))]
+        public static bool GetSynchronizedBySource(Image image)
+        {
+            return (bool)image.GetValue(SynchronizedBySourceProperty);
+        }
+
+        /// <summary>
+        /// Sets the value of the <c>SynchronizedBySource</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="image">The element on which to set the property value.</param>
+        /// <param name="value">true if the animation should be synchronized across all images that have the
+        /// same <c>AnimatedSource</c> and <c>RepeatBehavior</c>. Otherwise, false.</param>
+        /// <remarks>The default value is true.</remarks>
+        public static void SetSynchronizedBySource(Image image, bool value)
+        {
+            image.SetValue(SynchronizedBySourceProperty, value);
+        }
+
+        /// <summary>
+        /// Identifies the <c>SynchronizedBySource</c> attached property.
+        /// </summary>
+        public static readonly DependencyProperty SynchronizedBySourceProperty =
+            DependencyProperty.RegisterAttached(
+                "SynchronizedBySource",
+                typeof(bool),
+                typeof(ImageBehavior),
+                new PropertyMetadata(true, SynchronizedBySourceChanged));
+
 
         /// <summary>
         /// Identifies the <c>AnimationCompleted</c> attached event.
@@ -215,12 +250,33 @@ namespace WpfAnimatedGif
             var newValue = e.NewValue as ImageSource;
             if (oldValue != null)
             {
-                imageControl.BeginAnimation(Image.SourceProperty, null);
+                imageControl.Unloaded -= ImageControlUnloaded;
+                AnimationCache.DecrementReferenceCount(oldValue, GetRepeatBehavior(imageControl));
+                var controller = GetAnimationController(imageControl);
+                if (controller != null)
+                    controller.Dispose();
             }
             if (newValue != null)
             {
+                imageControl.Unloaded += ImageControlUnloaded;
                 imageControl.DoWhenLoaded(InitAnimationOrImage);
             }
+        }
+
+        static void ImageControlUnloaded(object sender, RoutedEventArgs e)
+        {
+            Image imageControl = sender as Image;
+            if (imageControl == null)
+                return;
+            imageControl.Unloaded -= ImageControlUnloaded;
+
+            var source = GetAnimatedSource(imageControl);
+            if (source != null)
+                AnimationCache.DecrementReferenceCount(source, GetRepeatBehavior(imageControl));
+
+            var controller = GetAnimationController(imageControl);
+            if (controller != null)
+                controller.Dispose();
         }
 
         private static void RepeatBehaviorChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
@@ -230,8 +286,27 @@ namespace WpfAnimatedGif
                 return;
 
             ImageSource source = GetAnimatedSource(imageControl);
-            if (source != null && imageControl.IsLoaded)
-                InitAnimationOrImage(imageControl);
+            if (source != null)
+            {
+                if (!Equals(e.OldValue, e.NewValue))
+                    AnimationCache.DecrementReferenceCount(source, GetRepeatBehavior(imageControl));
+                if (imageControl.IsLoaded)
+                    InitAnimationOrImage(imageControl);
+            }
+        }
+
+        private static void SynchronizedBySourceChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+        {
+            Image imageControl = o as Image;
+            if (imageControl == null)
+                return;
+
+            ImageSource source = GetAnimatedSource(imageControl);
+            if (source != null)
+            {
+                if (imageControl.IsLoaded)
+                    InitAnimationOrImage(imageControl);
+            }
         }
 
         private static void AnimateInDesignModeChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
@@ -284,69 +359,99 @@ namespace WpfAnimatedGif
                     return;
                 }
 
-                GifFile gifMetadata;
-                var decoder = GetDecoder(source, out gifMetadata) as GifBitmapDecoder;
-                if (decoder != null && decoder.Frames.Count > 1)
+                var animation = GetAnimation(imageControl, source);
+                if (animation != null)
                 {
-                    var fullSize = GetFullSize(decoder, gifMetadata);
-                    int index = 0;
-                    var animation = new ObjectAnimationUsingKeyFrames();
-                    var totalDuration = TimeSpan.Zero;
-                    BitmapSource baseFrame = null;
-                    foreach (var rawFrame in decoder.Frames)
-                    {
-                        var metadata = GetFrameMetadata(decoder, gifMetadata, index);
-
-                        var frame = MakeFrame(fullSize, rawFrame, metadata, baseFrame);
-                        var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
-                        animation.KeyFrames.Add(keyFrame);
-                        
-                        totalDuration += metadata.Delay;
-
-                        switch (metadata.DisposalMethod)
-                        {
-                            case FrameDisposalMethod.None:
-                            case FrameDisposalMethod.DoNotDispose:
-                                baseFrame = frame;
-                                break;
-                            case FrameDisposalMethod.RestoreBackground:
-                                if (IsFullFrame(metadata, fullSize))
-                                {
-                                    baseFrame = null;
-                                }
-                                else
-                                {
-                                    baseFrame = ClearArea(frame, metadata);
-                                }
-                                break;
-                            case FrameDisposalMethod.RestorePrevious:
-                                // Reuse same base frame
-                                break;
-                        }
-
-                        index++;
-                    }
-                    animation.Duration = totalDuration;
-                    
-                    animation.RepeatBehavior = GetActualRepeatBehavior(imageControl, decoder, gifMetadata);
-
                     if (animation.KeyFrames.Count > 0)
                     {
                         // For some reason, it sometimes throws an exception the first time... the second time it works.
-                        TryTwice(() => imageControl.Source = (ImageSource) animation.KeyFrames[0].Value);
+                        TryTwice(() => imageControl.Source = (ImageSource)animation.KeyFrames[0].Value);
                     }
                     else
                     {
-                        imageControl.Source = decoder.Frames[0];
+                        imageControl.Source = source;
                     }
 
-                    controller = new ImageAnimationController(imageControl, animation, GetAutoStart(imageControl));
+                    var repeatBehavior = GetRepeatBehavior(imageControl);
+                    bool synchronized = GetSynchronizedBySource(imageControl);
+                    AnimationCache.IncrementReferenceCount(source, repeatBehavior);
+                    AnimationClock clock;
+                    if (synchronized)
+                    {
+                        clock = AnimationCache.GetClock(source, repeatBehavior);
+                        if (clock == null)
+                        {
+                            clock = animation.CreateClock();
+                            AnimationCache.AddClock(source, repeatBehavior, clock);
+                        }
+                    }
+                    else
+                    {
+                        clock = animation.CreateClock();
+                    }
+                    controller = new ImageAnimationController(imageControl, animation, clock);
                     SetAnimationController(imageControl, controller);
-
                     return;
                 }
             }
             imageControl.Source = source;
+        }
+
+        private static ObjectAnimationUsingKeyFrames GetAnimation(Image imageControl, BitmapSource source)
+        {
+            var animation = AnimationCache.GetAnimation(source, GetRepeatBehavior(imageControl));
+            if (animation != null)
+                return animation;
+
+            GifFile gifMetadata;
+            var decoder = GetDecoder(source, out gifMetadata) as GifBitmapDecoder;
+            if (decoder != null && decoder.Frames.Count > 1)
+            {
+                var fullSize = GetFullSize(decoder, gifMetadata);
+                int index = 0;
+                animation = new ObjectAnimationUsingKeyFrames();
+                var totalDuration = TimeSpan.Zero;
+                BitmapSource baseFrame = null;
+                foreach (var rawFrame in decoder.Frames)
+                {
+                    var metadata = GetFrameMetadata(decoder, gifMetadata, index);
+
+                    var frame = MakeFrame(fullSize, rawFrame, metadata, baseFrame);
+                    var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
+                    animation.KeyFrames.Add(keyFrame);
+
+                    totalDuration += metadata.Delay;
+
+                    switch (metadata.DisposalMethod)
+                    {
+                        case FrameDisposalMethod.None:
+                        case FrameDisposalMethod.DoNotDispose:
+                            baseFrame = frame;
+                            break;
+                        case FrameDisposalMethod.RestoreBackground:
+                            if (IsFullFrame(metadata, fullSize))
+                            {
+                                baseFrame = null;
+                            }
+                            else
+                            {
+                                baseFrame = ClearArea(frame, metadata);
+                            }
+                            break;
+                        case FrameDisposalMethod.RestorePrevious:
+                            // Reuse same base frame
+                            break;
+                    }
+
+                    index++;
+                }
+                animation.Duration = totalDuration;
+                animation.RepeatBehavior = GetActualRepeatBehavior(imageControl, decoder, gifMetadata);
+
+                AnimationCache.AddAnimation(source, GetRepeatBehavior(imageControl), animation);
+                return animation;
+            }
+            return null;
         }
 
         private static BitmapSource ClearArea(BitmapSource frame, FrameMetadata metadata)
@@ -725,16 +830,5 @@ namespace WpfAnimatedGif
                 return metadata.GetQuery(query) as T;
             return null;
         }
-
-        // For debug purposes
-        //private static void Save(BitmapSource image, string path)
-        //{
-        //    var encoder = new PngBitmapEncoder();
-        //    encoder.Frames.Add(BitmapFrame.Create(image));
-        //    using (var stream = File.OpenWrite(path))
-        //    {
-        //        encoder.Save(stream);
-        //    }
-        //}
     }
 }

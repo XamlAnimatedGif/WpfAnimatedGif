@@ -17,7 +17,7 @@ using System.Windows.Markup;
 
 [assembly: AssemblyVersion(VersionInfo.VersionString)]
 [assembly: AssemblyFileVersion(VersionInfo.VersionString)]
-[assembly: AssemblyInformationalVersion(VersionInfo.VersionString)]
+[assembly: AssemblyInformationalVersion(VersionInfo.VersionString + "-beta")]
 
 [assembly: XmlnsDefinition("http://wpfanimatedgif.codeplex.com", "WpfAnimatedGif")]
 [assembly: XmlnsPrefix("http://wpfanimatedgif.codeplex.com", "gif")]
@@ -28,6 +28,6 @@ class VersionInfo
     /// <summary>
     /// Single place to define version
     /// </summary>
-    public const string VersionString = "1.4.4";
+    public const string VersionString = "1.5.0";
 }
 // ReSharper restore CheckNamespace
