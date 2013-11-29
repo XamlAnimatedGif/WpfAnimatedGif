@@ -252,5 +252,10 @@ namespace WpfAnimatedGif.Demo
                 SelectedImage = url;
             }
         }
+
+        private void AnimationLoaded(object sender, RoutedEventArgs e)
+        {
+            Debug.WriteLine("Animation loaded: {0}", ImageBehavior.GetIsAnimationLoaded(img));
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 
@@ -44,7 +45,7 @@ namespace WpfAnimatedGif
 
         void AnimationCompleted(object sender, EventArgs e)
         {
-            _image.RaiseEvent(new System.Windows.RoutedEventArgs(ImageBehavior.AnimationCompletedEvent, _image));
+            _image.RaiseEvent(new RoutedEventArgs(ImageBehavior.AnimationCompletedEvent, _image));
         }
 
         private void ImageSourceChanged(object sender, EventArgs e)
@@ -144,13 +145,34 @@ namespace WpfAnimatedGif
         }
 
         /// <summary>
+        /// Finalizes the current object.
+        /// </summary>
+        ~ImageAnimationController()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
         /// Disposes the current object.
         /// </summary>
         public void Dispose()
         {
-            _image.BeginAnimation(Image.SourceProperty, null);
-            _animation.Completed -= AnimationCompleted;
-            _sourceDescriptor.RemoveValueChanged(_image, ImageSourceChanged);
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Disposes the current object
+        /// </summary>
+        /// <param name="disposing">true to dispose both managed an unmanaged resources, false to dispose only managed resources</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _image.BeginAnimation(Image.SourceProperty, null);
+                _animation.Completed -= AnimationCompleted;
+                _sourceDescriptor.RemoveValueChanged(_image, ImageSourceChanged);
+            }
         }
     }
 }

@@ -168,6 +168,12 @@ namespace WpfAnimatedGif
             DependencyProperty.RegisterAttachedReadOnly("AnimationController", typeof(ImageAnimationController), typeof(ImageBehavior), new PropertyMetadata(null));
 
         /// <summary>
+        /// Identifies the <c>AnimationController</c> attached property.
+        /// </summary>
+        public static readonly DependencyProperty AnimationControllerProperty =
+            AnimationControllerPropertyKey.DependencyProperty;
+
+        /// <summary>
         /// Gets the value of the <c>SynchronizedBySource</c> attached property for the specified object.
         /// </summary>
         /// <param name="image">The element from which to read the property value.</param>
@@ -201,6 +207,29 @@ namespace WpfAnimatedGif
                 typeof(ImageBehavior),
                 new PropertyMetadata(true, SynchronizedBySourceChanged));
 
+        /// <summary>
+        /// Gets the value of the <c>IsAnimationLoaded</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="image">The element from which to read the property value.</param>
+        /// <returns>true if the animation is loaded. Otherwise, false.</returns>
+        public static bool GetIsAnimationLoaded(Image image)
+        {
+            return (bool)image.GetValue(IsAnimationLoadedProperty);
+        }
+
+        private static void SetIsAnimationLoaded(Image image, bool value)
+        {
+            image.SetValue(IsAnimationLoadedPropertyKey, value);
+        }
+
+        private static readonly DependencyPropertyKey IsAnimationLoadedPropertyKey =
+            DependencyProperty.RegisterAttachedReadOnly("IsAnimationLoaded", typeof(bool), typeof(ImageBehavior), new PropertyMetadata(false));
+
+        /// <summary>
+        /// Identifies the <c>IsAnimationLoaded</c> attached property.
+        /// </summary>
+        public static readonly DependencyProperty IsAnimationLoadedProperty =
+            IsAnimationLoadedPropertyKey.DependencyProperty;
 
         /// <summary>
         /// Identifies the <c>AnimationCompleted</c> attached event.
@@ -215,27 +244,67 @@ namespace WpfAnimatedGif
         /// <summary>
         /// Adds a handler for the AnimationCompleted attached event.
         /// </summary>
-        /// <param name="d">The UIElement that listens to this event.</param>
+        /// <param name="image">The UIElement that listens to this event.</param>
         /// <param name="handler">The event handler to be added.</param>
-        public static void AddAnimationCompletedHandler(Image d, RoutedEventHandler handler)
+        public static void AddAnimationCompletedHandler(Image image, RoutedEventHandler handler)
         {
-            var element = d as UIElement;
-            if (element == null)
-                return;
-            element.AddHandler(AnimationCompletedEvent, handler);
+            if (image == null)
+                throw new ArgumentNullException("image");
+            if (handler == null)
+                throw new ArgumentNullException("handler");
+            image.AddHandler(AnimationCompletedEvent, handler);
         }
 
         /// <summary>
         /// Removes a handler for the AnimationCompleted attached event.
         /// </summary>
-        /// <param name="d">The UIElement that listens to this event.</param>
+        /// <param name="image">The UIElement that listens to this event.</param>
         /// <param name="handler">The event handler to be removed.</param>
-        public static void RemoveAnimationCompletedHandler(Image d, RoutedEventHandler handler)
+        public static void RemoveAnimationCompletedHandler(Image image, RoutedEventHandler handler)
         {
-            var element = d as UIElement;
-            if (element == null)
-                return;
-            element.RemoveHandler(AnimationCompletedEvent, handler);
+            if (image == null)
+                throw new ArgumentNullException("image");
+            if (handler == null)
+                throw new ArgumentNullException("handler");
+            image.RemoveHandler(AnimationCompletedEvent, handler);
+        }
+
+        /// <summary>
+        /// Identifies the <c>AnimationLoaded</c> attached event.
+        /// </summary>
+        public static readonly RoutedEvent AnimationLoadedEvent =
+            EventManager.RegisterRoutedEvent(
+                "AnimationLoaded",
+                RoutingStrategy.Bubble,
+                typeof(RoutedEventHandler),
+                typeof(ImageBehavior));
+
+        /// <summary>
+        /// Adds a handler for the AnimationLoaded attached event.
+        /// </summary>
+        /// <param name="image">The UIElement that listens to this event.</param>
+        /// <param name="handler">The event handler to be added.</param>
+        public static void AddAnimationLoadedHandler(Image image, RoutedEventHandler handler)
+        {
+            if (image == null)
+                throw new ArgumentNullException("image");
+            if (handler == null)
+                throw new ArgumentNullException("handler");
+            image.AddHandler(AnimationLoadedEvent, handler);
+        }
+
+        /// <summary>
+        /// Removes a handler for the AnimationLoaded attached event.
+        /// </summary>
+        /// <param name="image">The UIElement that listens to this event.</param>
+        /// <param name="handler">The event handler to be removed.</param>
+        public static void RemoveAnimationLoadedHandler(Image image, RoutedEventHandler handler)
+        {
+            if (image == null)
+                throw new ArgumentNullException("image");
+            if (handler == null)
+                throw new ArgumentNullException("handler");
+            image.RemoveHandler(AnimationLoadedEvent, handler);
         }
 
         #endregion
@@ -333,6 +402,7 @@ namespace WpfAnimatedGif
             if (controller != null)
                 controller.Dispose();
             SetAnimationController(imageControl, null);
+            SetIsAnimationLoaded(imageControl, false);
 
             BitmapSource source = GetAnimatedSource(imageControl) as BitmapSource;
             bool isInDesignMode = DesignerProperties.GetIsInDesignMode(imageControl);
@@ -391,6 +461,8 @@ namespace WpfAnimatedGif
                     }
                     controller = new ImageAnimationController(imageControl, animation, clock);
                     SetAnimationController(imageControl, controller);
+                    SetIsAnimationLoaded(imageControl, true);
+                    imageControl.RaiseEvent(new RoutedEventArgs(AnimationLoadedEvent, imageControl));
                     return;
                 }
             }

@@ -96,7 +96,8 @@
                        gif:ImageBehavior.RepeatBehavior="{Binding RepeatBehavior}"
                        gif:ImageBehavior.AutoStart="{Binding AutoStart}"
                        gif:ImageBehavior.SynchronizedBySource="{Binding Synchronized}"
-                       gif:ImageBehavior.AnimationCompleted="AnimationCompleted" />
+                       gif:ImageBehavior.AnimationCompleted="AnimationCompleted"
+                       gif:ImageBehavior.AnimationLoaded="AnimationLoaded"/>
 
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top"
                         Visibility="{Binding Completed, Converter={StaticResource boolToVis}}">
