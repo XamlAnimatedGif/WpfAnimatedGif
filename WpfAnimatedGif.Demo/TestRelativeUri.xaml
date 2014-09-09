@@ -1,0 +1,15 @@
+﻿<Window x:Class="WpfAnimatedGif.Demo.TestRelativeUri"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:gif="http://wpfanimatedgif.codeplex.com"
+        Name="window"
+        Title="TestRelativeUri" Height="300" Width="600">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <!--<Image Grid.Column="0" Source="{Binding Img, ElementName=window}" />-->
+        <Image Grid.Column="1" gif:ImageBehavior.AnimatedSource="{Binding Img, ElementName=window}" />
+    </Grid>
+</Window>
