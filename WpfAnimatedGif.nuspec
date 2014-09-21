@@ -9,7 +9,7 @@
     <authors>Thomas Levesque</authors>
     <owners>Thomas Levesque</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.txt</licenseUrl>
-    <projectUrl>http://wpfanimatedgif.codeplex.com/</projectUrl>
+    <projectUrl>https://github.com/thomaslevesque/WpfAnimatedGif</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes>
       Resolved #2 (added AnimationLoaded attached event and IsAnimationLoaded attached property)
