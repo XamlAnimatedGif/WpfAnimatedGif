@@ -3,7 +3,7 @@
   <metadata>
     <id>WpfAnimatedGif</id>
     <title>WPF Animated GIF</title>
-    <version>1.4.4</version>
+    <version>1.4.5</version>
     <description>A simple library to display animated GIF images in WPF</description>
     <summary>A simple library to display animated GIF images in WPF</summary>
     <authors>Thomas Levesque</authors>
@@ -12,9 +12,9 @@
     <projectUrl>http://wpfanimatedgif.codeplex.com/</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes>
-      Fixed issue #1577 (Image fails to render if first frame is not a full frame)
+      Resolved #2 (added AnimationLoaded attached event and IsAnimationLoaded attached property)
     </releaseNotes>
-    <copyright>Copyright 2013</copyright>
+    <copyright>Copyright 2014</copyright>
     <tags>wpf animated gif</tags>
     <frameworkAssemblies>
       <frameworkAssembly assemblyName="WindowsBase" />
