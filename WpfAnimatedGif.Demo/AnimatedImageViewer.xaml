@@ -1,0 +1,119 @@
+﻿<UserControl x:Class="WpfAnimatedGif.Demo.AnimatedImageViewer"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:gif="http://wpfanimatedgif.codeplex.com"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="400">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="boolToVis" />
+        <Storyboard x:Key="Blink">
+            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" RepeatBehavior="Forever" Duration="0:0:1">
+                <DiscreteObjectKeyFrame KeyTime="0:0:0">
+                    <DiscreteObjectKeyFrame.Value>
+                        <Visibility>Visible</Visibility>
+                    </DiscreteObjectKeyFrame.Value>
+                </DiscreteObjectKeyFrame>
+                <DiscreteObjectKeyFrame KeyTime="0:0:0.5">
+                    <DiscreteObjectKeyFrame.Value>
+                        <Visibility>Hidden</Visibility>
+                    </DiscreteObjectKeyFrame.Value>
+                </DiscreteObjectKeyFrame>
+            </ObjectAnimationUsingKeyFrames>
+        </Storyboard>
+    </UserControl.Resources>
+    <DockPanel>
+        <GroupBox Header="Options" DockPanel.Dock="Top">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Label Content="Image" />
+
+                <ComboBox Grid.Row="0" Grid.Column="1" Margin="5"
+                          ItemsSource="{Binding Images}"
+                          SelectedItem="{Binding SelectedImage}"
+                          VerticalAlignment="Top" />
+
+                <Grid Grid.Row="0" Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Button Name="btnOpenFile" Grid.Row="0"
+                            Content="Open file..."
+                            Margin="5"
+                            Click="btnOpenFile_Click"/>
+                    <Button Name="btnOpenUrl" Grid.Row="1"
+                            Content="Open URL..."
+                            Margin="5,0,5,5"
+                            Click="btnOpenUrl_Click"/>
+                </Grid>
+
+                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                            Orientation="Horizontal">
+                    <RadioButton Margin="5" Content="Default" IsChecked="{Binding UseDefaultRepeatBehavior}" />
+                    <RadioButton Margin="5" Content="Forever" IsChecked="{Binding RepeatForever}" />
+                    <RadioButton Margin="5" Content="Specific count" IsChecked="{Binding UseSpecificRepeatCount}" />
+                    <TextBox Margin="5" Text="{Binding RepeatCount}" Width="20" />
+                    
+                </StackPanel>
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal">
+                    <CheckBox Margin="5" Content="Auto start" IsChecked="{Binding AutoStart}" />
+                    <CheckBox Margin="5" Content="Synchronized" IsChecked="{Binding Synchronized}" />
+                </StackPanel>
+
+            </Grid>
+        </GroupBox>
+        <GroupBox Header="Control" DockPanel.Dock="Bottom">
+            <DockPanel>
+                <Button Name="btnPlay" ToolTip="Play" Click="btnPlay_Click" Margin="5" IsEnabled="False" DockPanel.Dock="Left">
+                    <Image Source="/Images/play.png" Stretch="None" />
+                </Button>
+                <Button Name="btnPause" ToolTip="Pause" Click="btnPause_Click" Margin="5" IsEnabled="False" DockPanel.Dock="Left">
+                    <Image Source="/Images/pause.png" Stretch="None" />
+                </Button>
+                <Slider Name="sldPosition"
+                        TickFrequency="1" TickPlacement="BottomRight"
+                        Minimum="0" Maximum="9" ValueChanged="sldPosition_ValueChanged" VerticalAlignment="Center" Margin="10" />
+            </DockPanel>
+
+        </GroupBox>
+        <GroupBox Header="Image">
+            <Grid>
+                <Image Name="img" Margin="5"
+                       Stretch="None"
+                       gif:ImageBehavior.AnimatedSource="{Binding SelectedImage}"
+                       gif:ImageBehavior.RepeatBehavior="{Binding RepeatBehavior}"
+                       gif:ImageBehavior.AutoStart="{Binding AutoStart}"
+                       gif:ImageBehavior.SynchronizedBySource="{Binding Synchronized}"
+                       gif:ImageBehavior.AnimationCompleted="AnimationCompleted"
+                       gif:ImageBehavior.AnimationLoaded="AnimationLoaded"/>
+
+                <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Visibility="{Binding Completed, Converter={StaticResource boolToVis}}">
+                    <Label Content="Completed">
+                        <Label.Style>
+                            <Style TargetType="Label">
+                                <Style.Triggers>
+                                    <EventTrigger RoutedEvent="Loaded">
+                                        <BeginStoryboard Storyboard="{StaticResource Blink}" />
+                                    </EventTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Label.Style>
+                    </Label>
+                </Border>
+            </Grid>
+        </GroupBox>
+    </DockPanel>
+</UserControl>
