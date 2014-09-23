@@ -7,7 +7,7 @@ using System.Windows.Markup;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Thomas Levesque")]
 [assembly: AssemblyProduct("WpfAnimatedGif")]
-[assembly: AssemblyCopyright("Copyright ©  2012")]
+[assembly: AssemblyCopyright("Copyright ©  2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -28,6 +28,6 @@ class VersionInfo
     /// <summary>
     /// Single place to define version
     /// </summary>
-    public const string VersionString = "1.4.5";
+    public const string VersionString = "1.4.6";
 }
 // ReSharper restore CheckNamespace

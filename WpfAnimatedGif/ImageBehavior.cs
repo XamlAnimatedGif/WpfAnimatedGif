@@ -411,6 +411,11 @@ namespace WpfAnimatedGif
                 }
             }
             imageControl.Source = source;
+            if (source != null)
+            {
+                SetIsAnimationLoaded(imageControl, true);
+                imageControl.RaiseEvent(new RoutedEventArgs(AnimationLoadedEvent, imageControl));
+            }
         }
 
         private static BitmapSource ClearArea(BitmapSource frame, FrameMetadata metadata)
