@@ -3,7 +3,7 @@
   <metadata>
     <id>WpfAnimatedGif</id>
     <title>WPF Animated GIF</title>
-    <version>1.4.6</version>
+    <version>1.4.7</version>
     <description>A simple library to display animated GIF images in WPF</description>
     <summary>A simple library to display animated GIF images in WPF</summary>
     <authors>Thomas Levesque</authors>
@@ -12,7 +12,8 @@
     <projectUrl>https://github.com/thomaslevesque/WpfAnimatedGif</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes>
-      Fixed #3 (AnimationLoaded event not raised for non-animated image)
+      Animation caching to improve performance
+      Fixed possible memory leak
     </releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>wpf animated gif</tags>

@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Markup;
+using WpfAnimatedGif.Properties;
 
 [assembly: AssemblyTitle("WpfAnimatedGif")]
 [assembly: AssemblyDescription("A library to display animated GIF images in WPF")]
@@ -22,12 +23,13 @@ using System.Windows.Markup;
 [assembly: XmlnsDefinition("http://wpfanimatedgif.codeplex.com", "WpfAnimatedGif")]
 [assembly: XmlnsPrefix("http://wpfanimatedgif.codeplex.com", "gif")]
 
-// ReSharper disable CheckNamespace
-class VersionInfo
+namespace WpfAnimatedGif.Properties
 {
-    /// <summary>
-    /// Single place to define version
-    /// </summary>
-    public const string VersionString = "1.4.6";
+    public class VersionInfo
+    {
+        /// <summary>
+        /// Single place to define version
+        /// </summary>
+        public const string VersionString = "1.4.7";
+    }
 }
-// ReSharper restore CheckNamespace

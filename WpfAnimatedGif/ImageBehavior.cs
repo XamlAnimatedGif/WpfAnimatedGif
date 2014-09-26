@@ -277,12 +277,31 @@ namespace WpfAnimatedGif
             var newValue = e.NewValue as ImageSource;
             if (oldValue != null)
             {
-                imageControl.BeginAnimation(Image.SourceProperty, null);
+                imageControl.Unloaded -= ImageControlUnloaded;
+                AnimationCache.DecrementReferenceCount(oldValue, GetRepeatBehavior(imageControl));
+                var controller = GetAnimationController(imageControl);
+                if (controller != null)
+                    controller.Dispose();
             }
             if (newValue != null)
             {
+                imageControl.Unloaded += ImageControlUnloaded;
                 imageControl.DoWhenLoaded(InitAnimationOrImage);
             }
+        }
+
+        static void ImageControlUnloaded(object sender, RoutedEventArgs e)
+        {
+            Image imageControl = sender as Image;
+            if (imageControl == null)
+                return;
+            imageControl.Unloaded -= ImageControlUnloaded;
+            var source = GetAnimatedSource(imageControl);
+            if (source != null)
+                AnimationCache.DecrementReferenceCount(source, GetRepeatBehavior(imageControl));
+            var controller = GetAnimationController(imageControl);
+            if (controller != null)
+                controller.Dispose();
         }
 
         private static void RepeatBehaviorChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
@@ -292,8 +311,13 @@ namespace WpfAnimatedGif
                 return;
 
             ImageSource source = GetAnimatedSource(imageControl);
-            if (source != null && imageControl.IsLoaded)
-                InitAnimationOrImage(imageControl);
+            if (source != null)
+            {
+                if (!Equals(e.OldValue, e.NewValue))
+                    AnimationCache.DecrementReferenceCount(source, GetRepeatBehavior(imageControl));
+                if (imageControl.IsLoaded)
+                    InitAnimationOrImage(imageControl);
+            }
         }
 
         private static void AnimateInDesignModeChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
@@ -347,52 +371,9 @@ namespace WpfAnimatedGif
                     return;
                 }
 
-                GifFile gifMetadata;
-                var decoder = GetDecoder(source, out gifMetadata) as GifBitmapDecoder;
-                if (decoder != null && decoder.Frames.Count > 1)
+                var animation = GetAnimation(imageControl, source);
+                if (animation != null)
                 {
-                    var fullSize = GetFullSize(decoder, gifMetadata);
-                    int index = 0;
-                    var animation = new ObjectAnimationUsingKeyFrames();
-                    var totalDuration = TimeSpan.Zero;
-                    BitmapSource baseFrame = null;
-                    foreach (var rawFrame in decoder.Frames)
-                    {
-                        var metadata = GetFrameMetadata(decoder, gifMetadata, index);
-
-                        var frame = MakeFrame(fullSize, rawFrame, metadata, baseFrame);
-                        var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
-                        animation.KeyFrames.Add(keyFrame);
-                        
-                        totalDuration += metadata.Delay;
-
-                        switch (metadata.DisposalMethod)
-                        {
-                            case FrameDisposalMethod.None:
-                            case FrameDisposalMethod.DoNotDispose:
-                                baseFrame = frame;
-                                break;
-                            case FrameDisposalMethod.RestoreBackground:
-                                if (IsFullFrame(metadata, fullSize))
-                                {
-                                    baseFrame = null;
-                                }
-                                else
-                                {
-                                    baseFrame = ClearArea(frame, metadata);
-                                }
-                                break;
-                            case FrameDisposalMethod.RestorePrevious:
-                                // Reuse same base frame
-                                break;
-                        }
-
-                        index++;
-                    }
-                    animation.Duration = totalDuration;
-                    
-                    animation.RepeatBehavior = GetActualRepeatBehavior(imageControl, decoder, gifMetadata);
-
                     if (animation.KeyFrames.Count > 0)
                     {
                         // For some reason, it sometimes throws an exception the first time... the second time it works.
@@ -400,7 +381,7 @@ namespace WpfAnimatedGif
                     }
                     else
                     {
-                        imageControl.Source = decoder.Frames[0];
+                        imageControl.Source = source;
                     }
 
                     controller = new ImageAnimationController(imageControl, animation, GetAutoStart(imageControl));
@@ -416,6 +397,63 @@ namespace WpfAnimatedGif
                 SetIsAnimationLoaded(imageControl, true);
                 imageControl.RaiseEvent(new RoutedEventArgs(AnimationLoadedEvent, imageControl));
             }
+        }
+
+        private static ObjectAnimationUsingKeyFrames GetAnimation(Image imageControl, BitmapSource source)
+        {
+            var animation = AnimationCache.GetAnimation(source, GetRepeatBehavior(imageControl));
+            if (animation != null)
+                return animation;
+            GifFile gifMetadata;
+            var decoder = GetDecoder(source, out gifMetadata) as GifBitmapDecoder;
+            if (decoder != null && decoder.Frames.Count > 1)
+            {
+                var fullSize = GetFullSize(decoder, gifMetadata);
+                int index = 0;
+                animation = new ObjectAnimationUsingKeyFrames();
+                var totalDuration = TimeSpan.Zero;
+                BitmapSource baseFrame = null;
+                foreach (var rawFrame in decoder.Frames)
+                {
+                    var metadata = GetFrameMetadata(decoder, gifMetadata, index);
+
+                    var frame = MakeFrame(fullSize, rawFrame, metadata, baseFrame);
+                    var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
+                    animation.KeyFrames.Add(keyFrame);
+
+                    totalDuration += metadata.Delay;
+
+                    switch (metadata.DisposalMethod)
+                    {
+                        case FrameDisposalMethod.None:
+                        case FrameDisposalMethod.DoNotDispose:
+                            baseFrame = frame;
+                            break;
+                        case FrameDisposalMethod.RestoreBackground:
+                            if (IsFullFrame(metadata, fullSize))
+                            {
+                                baseFrame = null;
+                            }
+                            else
+                            {
+                                baseFrame = ClearArea(frame, metadata);
+                            }
+                            break;
+                        case FrameDisposalMethod.RestorePrevious:
+                            // Reuse same base frame
+                            break;
+                    }
+
+                    index++;
+                }
+                animation.Duration = totalDuration;
+
+                animation.RepeatBehavior = GetActualRepeatBehavior(imageControl, decoder, gifMetadata);
+
+                AnimationCache.AddAnimation(source, GetRepeatBehavior(imageControl), animation);
+                return animation;
+            }
+            return null;
         }
 
         private static BitmapSource ClearArea(BitmapSource frame, FrameMetadata metadata)

@@ -71,9 +71,6 @@ namespace WpfAnimatedGif.Decoding
                         case GifBlockKind.SpecialPurpose:
                             specialExtensions.Add(extension);
                             break;
-                        default:
-                            // Just ignore plain text extensions, as most software don't support them.
-                            break;
                     }
                 }
                 else if (block is GifTrailer)

@@ -40,6 +40,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnimationCache.cs" />
     <Compile Include="Decoding\GifApplicationExtension.cs" />
     <Compile Include="Decoding\GifBlock.cs" />
     <Compile Include="Decoding\GifBlockKind.cs" />

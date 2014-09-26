@@ -144,10 +144,29 @@ namespace WpfAnimatedGif
         }
 
         /// <summary>
+        /// Finalizes the current object.
+        /// </summary>
+        ~ImageAnimationController()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
         /// Disposes the current object.
         /// </summary>
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Disposes the current object
+        /// </summary>
+        /// <param name="disposing">true to dispose both managed an unmanaged resources, false to dispose only managed resources</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            _image.BeginAnimation(Image.SourceProperty, null);
             _animation.Completed -= AnimationCompleted;
             _sourceDescriptor.RemoveValueChanged(_image, ImageSourceChanged);
         }

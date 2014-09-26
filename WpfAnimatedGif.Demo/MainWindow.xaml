@@ -37,12 +37,12 @@
                 
                 <Label Content="Image" />
                 
-                <ComboBox Grid.Column="1" Margin="5"
+                <ComboBox Grid.Row="0" Grid.Column="1" Margin="5"
                           ItemsSource="{Binding Images}"
                           SelectedItem="{Binding SelectedImage}"
                           VerticalAlignment="Top" />
 
-                <Grid Grid.Column="2">
+                <Grid Grid.Row="0" Grid.Column="2">
                     <Grid.RowDefinitions>
                         <RowDefinition />
                         <RowDefinition />
