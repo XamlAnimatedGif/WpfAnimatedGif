@@ -12,15 +12,19 @@ namespace WpfAnimatedGif
         {
             private readonly ImageSource _source;
             private readonly RepeatBehavior _repeatBehavior;
+
             public CacheKey(ImageSource source, RepeatBehavior repeatBehavior)
             {
                 _source = source;
                 _repeatBehavior = repeatBehavior;
             }
+
             private bool Equals(CacheKey other)
             {
-                return ImageEquals(_source, other._source) && Equals(_repeatBehavior, other._repeatBehavior);
+                return ImageEquals(_source, other._source)
+                    && Equals(_repeatBehavior, other._repeatBehavior);
             }
+
             public override bool Equals(object obj)
             {
                 if (ReferenceEquals(null, obj)) return false;
@@ -28,6 +32,7 @@ namespace WpfAnimatedGif
                 if (obj.GetType() != this.GetType()) return false;
                 return Equals((CacheKey)obj);
             }
+
             public override int GetHashCode()
             {
                 unchecked
@@ -35,6 +40,7 @@ namespace WpfAnimatedGif
                     return (ImageGetHashCode(_source) * 397) ^ _repeatBehavior.GetHashCode();
                 }
             }
+
             private static int ImageGetHashCode(ImageSource image)
             {
                 if (image != null)
@@ -45,6 +51,7 @@ namespace WpfAnimatedGif
                 }
                 return 0;
             }
+
             private static bool ImageEquals(ImageSource x, ImageSource y)
             {
                 if (Equals(x, y))
@@ -61,6 +68,7 @@ namespace WpfAnimatedGif
                 var yUri = GetUri(y);
                 return xUri != null && xUri == yUri;
             }
+
             private static Uri GetUri(ImageSource image)
             {
                 var bmp = image as BitmapImage;
@@ -88,12 +96,11 @@ namespace WpfAnimatedGif
                 return null;
             }
         }
-        private static readonly Dictionary<CacheKey, ObjectAnimationUsingKeyFrames> _animationCache =
-        new Dictionary<CacheKey, ObjectAnimationUsingKeyFrames>();
-        private static readonly Dictionary<CacheKey, int> _referenceCount =
-        new Dictionary<CacheKey, int>();
-        private static readonly Dictionary<CacheKey, AnimationClock> _clockCache =
-        new Dictionary<CacheKey, AnimationClock>();
+
+        private static readonly Dictionary<CacheKey, ObjectAnimationUsingKeyFrames> _animationCache = new Dictionary<CacheKey, ObjectAnimationUsingKeyFrames>();
+        private static readonly Dictionary<CacheKey, int> _referenceCount = new Dictionary<CacheKey, int>();
+        private static readonly Dictionary<CacheKey, AnimationClock> _clockCache = new Dictionary<CacheKey, AnimationClock>();
+
         public static void IncrementReferenceCount(ImageSource source, RepeatBehavior repeatBehavior)
         {
             var cacheKey = new CacheKey(source, repeatBehavior);
@@ -102,6 +109,7 @@ namespace WpfAnimatedGif
             count++;
             _referenceCount[cacheKey] = count;
         }
+
         public static void DecrementReferenceCount(ImageSource source, RepeatBehavior repeatBehavior)
         {
             var cacheKey = new CacheKey(source, repeatBehavior);
@@ -119,16 +127,19 @@ namespace WpfAnimatedGif
                 _clockCache.Remove(cacheKey);
             }
         }
+
         public static void AddAnimation(ImageSource source, RepeatBehavior repeatBehavior, ObjectAnimationUsingKeyFrames animation)
         {
             var key = new CacheKey(source, repeatBehavior);
             _animationCache[key] = animation;
         }
+
         public static void RemoveAnimation(ImageSource source, RepeatBehavior repeatBehavior, ObjectAnimationUsingKeyFrames animation)
         {
             var key = new CacheKey(source, repeatBehavior);
             _animationCache.Remove(key);
         }
+
         public static ObjectAnimationUsingKeyFrames GetAnimation(ImageSource source, RepeatBehavior repeatBehavior)
         {
             var key = new CacheKey(source, repeatBehavior);
@@ -136,11 +147,13 @@ namespace WpfAnimatedGif
             _animationCache.TryGetValue(key, out animation);
             return animation;
         }
+
         public static void AddClock(ImageSource source, RepeatBehavior repeatBehavior, AnimationClock clock)
         {
             var key = new CacheKey(source, repeatBehavior);
             _clockCache[key] = clock;
         }
+
         public static AnimationClock GetClock(ImageSource source, RepeatBehavior repeatBehavior)
         {
             var key = new CacheKey(source, repeatBehavior);

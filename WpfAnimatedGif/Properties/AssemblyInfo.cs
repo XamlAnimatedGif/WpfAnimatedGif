@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Markup;
 using WpfAnimatedGif.Properties;
@@ -23,13 +24,15 @@ using WpfAnimatedGif.Properties;
 [assembly: XmlnsDefinition("http://wpfanimatedgif.codeplex.com", "WpfAnimatedGif")]
 [assembly: XmlnsPrefix("http://wpfanimatedgif.codeplex.com", "gif")]
 
+[assembly: InternalsVisibleTo("WpfAnimatedGif.Demo")]
+
 namespace WpfAnimatedGif.Properties
 {
-    public class VersionInfo
+    class VersionInfo
     {
         /// <summary>
         /// Single place to define version
         /// </summary>
-        public const string VersionString = "1.4.7";
+        public const string VersionString = "1.4.8";
     }
 }
