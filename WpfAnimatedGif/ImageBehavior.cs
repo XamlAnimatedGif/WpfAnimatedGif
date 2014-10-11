@@ -314,7 +314,7 @@ namespace WpfAnimatedGif
             if (source != null)
             {
                 if (!Equals(e.OldValue, e.NewValue))
-                    AnimationCache.DecrementReferenceCount(source, GetRepeatBehavior(imageControl));
+                    AnimationCache.DecrementReferenceCount(source, (RepeatBehavior)e.OldValue);
                 if (imageControl.IsLoaded)
                     InitAnimationOrImage(imageControl);
             }
@@ -451,6 +451,7 @@ namespace WpfAnimatedGif
                 animation.RepeatBehavior = GetActualRepeatBehavior(imageControl, decoder, gifMetadata);
 
                 AnimationCache.AddAnimation(source, GetRepeatBehavior(imageControl), animation);
+                AnimationCache.IncrementReferenceCount(source, GetRepeatBehavior(imageControl));
                 return animation;
             }
             return null;

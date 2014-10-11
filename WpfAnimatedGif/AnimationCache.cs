@@ -72,9 +72,11 @@ namespace WpfAnimatedGif
             private static Uri GetUri(ImageSource image)
             {
                 var bmp = image as BitmapImage;
-                if (bmp != null)
+                if (bmp != null && bmp.UriSource != null)
                 {
-                    if (bmp.BaseUri != null && bmp.UriSource != null && !bmp.UriSource.IsAbsoluteUri)
+                    if (bmp.UriSource.IsAbsoluteUri)
+                        return bmp.UriSource;
+                    if (bmp.BaseUri != null)
                         return new Uri(bmp.BaseUri, bmp.UriSource);
                 }
                 var frame = image as BitmapFrame;
@@ -99,7 +101,6 @@ namespace WpfAnimatedGif
 
         private static readonly Dictionary<CacheKey, ObjectAnimationUsingKeyFrames> _animationCache = new Dictionary<CacheKey, ObjectAnimationUsingKeyFrames>();
         private static readonly Dictionary<CacheKey, int> _referenceCount = new Dictionary<CacheKey, int>();
-        private static readonly Dictionary<CacheKey, AnimationClock> _clockCache = new Dictionary<CacheKey, AnimationClock>();
 
         public static void IncrementReferenceCount(ImageSource source, RepeatBehavior repeatBehavior)
         {
@@ -124,7 +125,6 @@ namespace WpfAnimatedGif
             {
                 _animationCache.Remove(cacheKey);
                 _referenceCount.Remove(cacheKey);
-                _clockCache.Remove(cacheKey);
             }
         }
 
@@ -146,20 +146,6 @@ namespace WpfAnimatedGif
             ObjectAnimationUsingKeyFrames animation;
             _animationCache.TryGetValue(key, out animation);
             return animation;
-        }
-
-        public static void AddClock(ImageSource source, RepeatBehavior repeatBehavior, AnimationClock clock)
-        {
-            var key = new CacheKey(source, repeatBehavior);
-            _clockCache[key] = clock;
-        }
-
-        public static AnimationClock GetClock(ImageSource source, RepeatBehavior repeatBehavior)
-        {
-            var key = new CacheKey(source, repeatBehavior);
-            AnimationClock clock;
-            _clockCache.TryGetValue(key, out clock);
-            return clock;
         }
     }
 }
