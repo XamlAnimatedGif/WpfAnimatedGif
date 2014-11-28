@@ -1,6 +1,8 @@
 WPF Animated GIF
 ================
 
+[![Build status](https://ci.appveyor.com/api/projects/status/9qdlpbpf3gyfuvdu?svg=true)](https://ci.appveyor.com/project/thomaslevesque/wpfanimatedgif)
+
 _Nuget package available here: [WpfAnimatedGif](https://nuget.org/packages/WpfAnimatedGif)._
 
 A simple library to display animated GIF images in WPF, usable in XAML or in code.
