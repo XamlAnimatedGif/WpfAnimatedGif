@@ -277,6 +277,7 @@ namespace WpfAnimatedGif
             var newValue = e.NewValue as ImageSource;
             if (oldValue != null)
             {
+                imageControl.Loaded -= ImageControlLoaded;
                 imageControl.Unloaded -= ImageControlUnloaded;
                 AnimationCache.DecrementReferenceCount(oldValue, GetRepeatBehavior(imageControl));
                 var controller = GetAnimationController(imageControl);
@@ -285,9 +286,19 @@ namespace WpfAnimatedGif
             }
             if (newValue != null)
             {
+                imageControl.Loaded += ImageControlLoaded;
                 imageControl.Unloaded += ImageControlUnloaded;
-                imageControl.DoWhenLoaded(InitAnimationOrImage);
+                if (imageControl.IsLoaded)
+                    InitAnimationOrImage(imageControl);
             }
+        }
+
+        private static void ImageControlLoaded(object sender, RoutedEventArgs e)
+        {
+            Image imageControl = sender as Image;
+            if (imageControl == null)
+                return;
+            InitAnimationOrImage(imageControl);
         }
 
         static void ImageControlUnloaded(object sender, RoutedEventArgs e)
@@ -295,7 +306,6 @@ namespace WpfAnimatedGif
             Image imageControl = sender as Image;
             if (imageControl == null)
                 return;
-            imageControl.Unloaded -= ImageControlUnloaded;
             var source = GetAnimatedSource(imageControl);
             if (source != null)
                 AnimationCache.DecrementReferenceCount(source, GetRepeatBehavior(imageControl));
@@ -798,25 +808,6 @@ namespace WpfAnimatedGif
             DoNotDispose = 1,
             RestoreBackground = 2,
             RestorePrevious = 3
-        }
-
-        private static void DoWhenLoaded<T>(this T element, Action<T> action)
-            where T : FrameworkElement
-        {
-            if (element.IsLoaded)
-            {
-                action(element);
-            }
-            else
-            {
-                RoutedEventHandler handler = null;
-                handler = (sender, e) =>
-                {
-                    element.Loaded -= handler;
-                    action(element);
-                };
-                element.Loaded += handler;
-            }
         }
 
         private static T GetQueryOrDefault<T>(this BitmapMetadata metadata, string query, T defaultValue)
