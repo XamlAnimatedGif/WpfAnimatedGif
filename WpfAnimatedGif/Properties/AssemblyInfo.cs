@@ -33,6 +33,6 @@ namespace WpfAnimatedGif.Properties
         /// <summary>
         /// Single place to define version
         /// </summary>
-        public const string VersionString = "1.4.9";
+        public const string VersionString = "1.4.10";
     }
 }
