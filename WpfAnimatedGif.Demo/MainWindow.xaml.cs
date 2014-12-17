@@ -245,5 +245,10 @@ namespace WpfAnimatedGif.Demo
         {
             GC.Collect();
         }
+
+        private void btnClearImage_Click(object sender, RoutedEventArgs e)
+        {
+            SelectedImage = null;
+        }
     }
 }

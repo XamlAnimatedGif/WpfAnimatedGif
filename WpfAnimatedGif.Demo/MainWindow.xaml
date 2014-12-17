@@ -66,8 +66,10 @@
                     <CheckBox Margin="5" Content="Auto start" IsChecked="{Binding AutoStart}" />
                 </StackPanel>
                 
-                <Button Name="btnGC" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right"
-                        Content="GC" Click="btnGC_Click"  />
+                <StackPanel Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Name="btnClearImage" Content="Clear image" Click="btnClearImage_Click" Margin="5,0,0,5"  />
+                    <Button Name="btnGC" Content="GC" Click="btnGC_Click" Margin="5,0,5,5" />
+                </StackPanel>
                 
             </Grid>
         </GroupBox>

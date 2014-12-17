@@ -171,6 +171,7 @@ namespace WpfAnimatedGif
                 _image.BeginAnimation(Image.SourceProperty, null);
                 _animation.Completed -= AnimationCompleted;
                 _sourceDescriptor.RemoveValueChanged(_image, ImageSourceChanged);
+                _image.Source = null;
             }
         }
     }
