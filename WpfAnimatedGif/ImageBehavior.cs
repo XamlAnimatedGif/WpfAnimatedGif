@@ -283,6 +283,7 @@ namespace WpfAnimatedGif
                 var controller = GetAnimationController(imageControl);
                 if (controller != null)
                     controller.Dispose();
+                imageControl.Source = null;
             }
             if (newValue != null)
             {
