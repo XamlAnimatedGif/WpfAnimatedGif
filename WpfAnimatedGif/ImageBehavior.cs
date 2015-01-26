@@ -583,7 +583,7 @@ namespace WpfAnimatedGif
             try
             {
                 var m = decoder.Metadata;
-                return m != null;
+                return m != null && m.ContainsQuery("/logscrdesc");
             }
             catch
             {
