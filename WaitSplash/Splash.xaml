@@ -1,8 +1,23 @@
 ﻿<Window x:Class="WaitSplash.Splash"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Splash" Height="300" Width="300">
-    <Grid>
-        
+        x:Name="SplashWindow"
+	xmlns:gif="http://wpfanimatedgif.codeplex.com"
+        gif:ImageBehavior.AnimateInDesignMode="True"
+        WindowStartupLocation="Manual"
+	Title="WaitSplash"
+	Width="200" Height="200" AllowsTransparency="True" WindowStyle="None" Background="{x:Null}" ShowInTaskbar="False" ResizeMode="NoResize" ToolTip="Please Wait . . . ">
+
+    <Grid x:Name="LayoutRoot" ToolTip="Please Wait . . ." Opacity="0.9">
+        <Image Stretch="Fill"
+                       gif:ImageBehavior.AnimatedSource="ajax_loader_metal_300.gif"
+                       gif:ImageBehavior.RepeatBehavior="Forever"
+                       gif:ImageBehavior.AutoStart="True"/>
+        <TextBlock x:Name="lblTimeNo" HorizontalAlignment="Center" Height="50" Margin="0" TextWrapping="Wrap" Text="0" VerticalAlignment="Center" Width="85" FontWeight="Bold" TextAlignment="Center" FontSize="48" Foreground="#FFFEDD7A" FontFamily="Digital-7">
+            <TextBlock.Effect>
+                <DropShadowEffect Direction="0" ShadowDepth="0" Color="#FFE6C500" BlurRadius="8"/>
+            </TextBlock.Effect>
+        </TextBlock>
+
     </Grid>
 </Window>
