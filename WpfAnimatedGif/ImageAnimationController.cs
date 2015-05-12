@@ -32,9 +32,8 @@ namespace WpfAnimatedGif
             _clockController = _clock.Controller;
             _sourceDescriptor.AddValueChanged(image, ImageSourceChanged);
 
-            // ReSharper disable PossibleNullReferenceException
+            // ReSharper disable once PossibleNullReferenceException
             _clockController.Pause();
-            // ReSharper restore PossibleNullReferenceException
             
             _image.ApplyAnimationClock(Image.SourceProperty, _clock);
             
@@ -118,18 +117,7 @@ namespace WpfAnimatedGif
         /// </summary>
         public void Play()
         {
-            switch (_clock.CurrentState)
-            {
-                case ClockState.Active:
-                    _clockController.Resume();
-                    break;
-                case ClockState.Filling:
-                case ClockState.Stopped:
-                    _clockController.Begin();
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            _clockController.Resume();
         }
 
         /// <summary>

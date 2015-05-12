@@ -574,6 +574,14 @@ namespace WpfAnimatedGif
                 {
                     gifFile = DecodeGifFile(uri);
                 }
+                else
+                {
+                    throw new InvalidOperationException("Can't get URI or Stream from the source. AnimatedSource should be either a BitmapImage, or a BitmapFrame constructed from a URI.");
+                }
+            }
+            if (decoder == null)
+            {
+                throw new InvalidOperationException("Can't get a decoder from the source. AnimatedSource should be either a BitmapImage or a BitmapFrame.");
             }
             return decoder;
         }
