@@ -48,3 +48,9 @@ Features
 * Animation preview in design mode (must be enabled explicitly)
 * Support for controlling the animation manually (pause/resume/seek)
 
+Donate
+------
+
+WpfAnimatedGif is a personal open-source project. It is, and will remain, completely free of charge. That being said, if you want to reward me for the time I spent working on it, I'll  gladly accept donations.
+
+[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.me/thomaslevesque)
