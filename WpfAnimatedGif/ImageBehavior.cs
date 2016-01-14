@@ -275,6 +275,8 @@ namespace WpfAnimatedGif
 
             var oldValue = e.OldValue as ImageSource;
             var newValue = e.NewValue as ImageSource;
+            if (ReferenceEquals(oldValue, newValue))
+                return;
             if (oldValue != null)
             {
                 imageControl.Loaded -= ImageControlLoaded;
