@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfAnimatedGif", "WpfAnimatedGif\WpfAnimatedGif.csproj", "{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}"
 EndProject
@@ -12,20 +12,48 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		WpfAnimatedGif.nuspec = WpfAnimatedGif.nuspec
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WaitSplash", "WaitSplash\WaitSplash.csproj", "{1756260B-0FF9-4BC9-9596-55AD2EF21FAF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWaitSplash", "TestWaitSplash\TestWaitSplash.csproj", "{E4E75330-9BBE-4D21-A328-770931CE26E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Release|Any CPU = Release|Any CPU
 		Release|Mixed Platforms = Release|Mixed Platforms
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
 		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Release|Any CPU.ActiveCfg = Release|x86
 		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Release|Mixed Platforms.Build.0 = Release|x86
+		{1756260B-0FF9-4BC9-9596-55AD2EF21FAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1756260B-0FF9-4BC9-9596-55AD2EF21FAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1756260B-0FF9-4BC9-9596-55AD2EF21FAF}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{1756260B-0FF9-4BC9-9596-55AD2EF21FAF}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{1756260B-0FF9-4BC9-9596-55AD2EF21FAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1756260B-0FF9-4BC9-9596-55AD2EF21FAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1756260B-0FF9-4BC9-9596-55AD2EF21FAF}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{1756260B-0FF9-4BC9-9596-55AD2EF21FAF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{E4E75330-9BBE-4D21-A328-770931CE26E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4E75330-9BBE-4D21-A328-770931CE26E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4E75330-9BBE-4D21-A328-770931CE26E2}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{E4E75330-9BBE-4D21-A328-770931CE26E2}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{E4E75330-9BBE-4D21-A328-770931CE26E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4E75330-9BBE-4D21-A328-770931CE26E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4E75330-9BBE-4D21-A328-770931CE26E2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{E4E75330-9BBE-4D21-A328-770931CE26E2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
