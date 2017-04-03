@@ -11,18 +11,18 @@ namespace WpfAnimatedGif
     /// </summary>
     public class ImageAnimationController : IDisposable
     {
-        private static readonly DependencyPropertyDescriptor _sourceDescriptor;
+        private static DependencyPropertyDescriptor _sourceDescriptor;
 
         static ImageAnimationController()
         {
-            _sourceDescriptor = DependencyPropertyDescriptor.FromProperty(Image.SourceProperty, typeof (Image));
+            _sourceDescriptor = DependencyPropertyDescriptor.FromProperty(Image.SourceProperty, typeof(Image));
         }
 
-        private readonly Image _image;
-        private readonly ObjectAnimationUsingKeyFrames _animation;
-        private readonly AnimationClock _clock;
-        private readonly ClockController _clockController;
-        
+        private Image _image;
+        private ObjectAnimationUsingKeyFrames _animation;
+        private AnimationClock _clock;
+        private ClockController _clockController;
+
         internal ImageAnimationController(Image image, ObjectAnimationUsingKeyFrames animation, bool autoStart)
         {
             _image = image;
@@ -34,9 +34,9 @@ namespace WpfAnimatedGif
 
             // ReSharper disable once PossibleNullReferenceException
             _clockController.Pause();
-            
+
             _image.ApplyAnimationClock(Image.SourceProperty, _clock);
-            
+
             if (autoStart)
                 _clockController.Resume();
         }
@@ -95,9 +95,9 @@ namespace WpfAnimatedGif
                 var time = _clock.CurrentTime;
                 var frameAndIndex =
                     _animation.KeyFrames
-                              .Cast<ObjectKeyFrame>()
-                              .Select((f, i) => new { Time = f.KeyTime.TimeSpan, Index = i })
-                              .FirstOrDefault(fi => fi.Time >= time);
+                        .Cast<ObjectKeyFrame>()
+                        .Select((f, i) => new { Time = f.KeyTime.TimeSpan, Index = i })
+                        .FirstOrDefault(fi => fi.Time >= time);
                 if (frameAndIndex != null)
                     return frameAndIndex.Index;
                 return -1;
@@ -160,6 +160,11 @@ namespace WpfAnimatedGif
                 _animation.Completed -= AnimationCompleted;
                 _sourceDescriptor.RemoveValueChanged(_image, ImageSourceChanged);
                 _image.Source = null;
+                _animation = null;
+                _image = null;
+                _sourceDescriptor = null;
+                _clock = null;
+                _clockController = null;
             }
         }
     }
