@@ -60,13 +60,13 @@ namespace WpfAnimatedGif
         }
 
         /// <summary>
-        /// Returns the number of frames in the image.
+        /// Returns the duration of the animation.
         /// </summary>
         public TimeSpan Duration
         {
             get
             {
-                return _animation.Duration != null && _animation.Duration.HasTimeSpan
+                return _animation.Duration.HasTimeSpan
                   ? _animation.Duration.TimeSpan
                   : TimeSpan.Zero;
             }
