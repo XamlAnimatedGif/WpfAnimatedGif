@@ -22,7 +22,7 @@ namespace WpfAnimatedGif
         private readonly ObjectAnimationUsingKeyFrames _animation;
         private readonly AnimationClock _clock;
         private readonly ClockController _clockController;
-        
+
         internal ImageAnimationController(Image image, ObjectAnimationUsingKeyFrames animation, bool autoStart)
         {
             _image = image;
@@ -34,9 +34,9 @@ namespace WpfAnimatedGif
 
             // ReSharper disable once PossibleNullReferenceException
             _clockController.Pause();
-            
+
             _image.ApplyAnimationClock(Image.SourceProperty, _clock);
-            
+
             if (autoStart)
                 _clockController.Resume();
         }
@@ -57,6 +57,19 @@ namespace WpfAnimatedGif
         public int FrameCount
         {
             get { return _animation.KeyFrames.Count; }
+        }
+
+        /// <summary>
+        /// Returns the duration of the animation.
+        /// </summary>
+        public TimeSpan Duration
+        {
+            get
+            {
+                return _animation.Duration.HasTimeSpan
+                  ? _animation.Duration.TimeSpan
+                  : TimeSpan.Zero;
+            }
         }
 
         /// <summary>
