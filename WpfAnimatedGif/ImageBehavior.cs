@@ -492,9 +492,11 @@ namespace WpfAnimatedGif
                     PixelFormats.Pbgra32);
             bitmap.Render(visual);
 
-            if (bitmap.CanFreeze && !bitmap.IsFrozen)
-                bitmap.Freeze();
-            return bitmap;
+            var result = new WriteableBitmap(bitmap);
+
+            if (result.CanFreeze && !result.IsFrozen)
+                result.Freeze();
+            return result;
         }
 
         private static void TryTwice(Action action)
@@ -668,9 +670,11 @@ namespace WpfAnimatedGif
                 PixelFormats.Pbgra32);
             bitmap.Render(visual);
 
-            if (bitmap.CanFreeze && !bitmap.IsFrozen)
-                bitmap.Freeze();
-            return bitmap;
+            var result = new WriteableBitmap(bitmap);
+
+            if (result.CanFreeze && !result.IsFrozen)
+                result.Freeze();
+            return result;
         }
 
         private static RepeatBehavior GetActualRepeatBehavior(Image imageControl, BitmapDecoder decoder, GifFile gifMetadata)
