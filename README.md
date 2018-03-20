@@ -36,7 +36,7 @@ image.EndInit();
 ImageBehavior.SetAnimatedSource(img, image);
 ```
 
-See the [wiki](https://github.com/thomaslevesque/WpfAnimatedGif/wiki) for more details on usage.
+See the [wiki](https://github.com/XamlAnimatedGif/WpfAnimatedGif/wiki) for more details on usage.
 
 Features
 --------
