@@ -500,7 +500,7 @@ namespace WpfAnimatedGif
                     PixelFormats.Pbgra32);
             bitmap.Render(visual);
 
-            var result = new WriteableBitmap(bitmap);
+            var result = new CachedBitmap(bitmap, BitmapCreateOptions.None, BitmapCacheOption.Default);
 
             if (result.CanFreeze && !result.IsFrozen)
                 result.Freeze();
@@ -678,7 +678,7 @@ namespace WpfAnimatedGif
                 PixelFormats.Pbgra32);
             bitmap.Render(visual);
 
-            var result = new WriteableBitmap(bitmap);
+            var result = new CachedBitmap(bitmap, BitmapCreateOptions.None, BitmapCacheOption.Default);
 
             if (result.CanFreeze && !result.IsFrozen)
                 result.Freeze();
