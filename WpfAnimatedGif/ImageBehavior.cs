@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -374,7 +375,7 @@ namespace WpfAnimatedGif
             
             // For a BitmapImage with a relative UriSource, the loading is deferred until
             // BaseUri is set. This method will be called again when BaseUri is set.
-            bool isLoadingDeferred = IsLoadingDeferred(source);
+            bool isLoadingDeferred = IsLoadingDeferred(source, imageControl);
 
             if (source != null && shouldAnimate && !isLoadingDeferred)
             {
@@ -426,7 +427,7 @@ namespace WpfAnimatedGif
             if (animation != null)
                 return animation;
             GifFile gifMetadata;
-            var decoder = GetDecoder(source, out gifMetadata) as GifBitmapDecoder;
+            var decoder = GetDecoder(source, imageControl, out gifMetadata) as GifBitmapDecoder;
             if (decoder != null && decoder.Frames.Count > 1)
             {
                 var fullSize = GetFullSize(decoder, gifMetadata);
@@ -519,17 +520,17 @@ namespace WpfAnimatedGif
             }
         }
 
-        private static bool IsLoadingDeferred(BitmapSource source)
+        private static bool IsLoadingDeferred(BitmapSource source, Image imageControl)
         {
             var bmp = source as BitmapImage;
             if (bmp == null)
                 return false;
             if (bmp.UriSource != null && !bmp.UriSource.IsAbsoluteUri)
-                return bmp.BaseUri == null;
+                return bmp.BaseUri == null && (imageControl as IUriContext)?.BaseUri == null;
             return false;
         }
 
-        private static BitmapDecoder GetDecoder(BitmapSource image, out GifFile gifFile)
+        private static BitmapDecoder GetDecoder(BitmapSource image, Image imageControl, out GifFile gifFile)
         {
             gifFile = null;
             BitmapDecoder decoder = null;
@@ -548,8 +549,12 @@ namespace WpfAnimatedGif
                 else if (bmp.UriSource != null)
                 {
                     uri = bmp.UriSource;
-                    if (bmp.BaseUri != null && !uri.IsAbsoluteUri)
-                        uri = new Uri(bmp.BaseUri, uri);
+                    if (!uri.IsAbsoluteUri)
+                    {
+                        var baseUri = bmp.BaseUri ?? (imageControl as IUriContext)?.BaseUri;
+                        if (baseUri != null)
+                            uri = new Uri(baseUri, uri);
+                    }
                 }
             }
             else
