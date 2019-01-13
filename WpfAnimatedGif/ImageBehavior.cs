@@ -237,8 +237,8 @@ namespace WpfAnimatedGif
             EventManager.RegisterRoutedEvent(
                 "AnimationCompleted",
                 RoutingStrategy.Bubble,
-                typeof (RoutedEventHandler),
-                typeof (ImageBehavior));
+                typeof(RoutedEventHandler),
+                typeof(ImageBehavior));
 
         /// <summary>
         /// Adds a handler for the AnimationCompleted attached event.
@@ -290,6 +290,8 @@ namespace WpfAnimatedGif
             {
                 imageControl.Loaded -= ImageControlLoaded;
                 imageControl.Unloaded -= ImageControlUnloaded;
+                imageControl.IsVisibleChanged -= VisibilityChanged;
+
                 AnimationCache.DecrementReferenceCount(oldValue, GetRepeatBehavior(imageControl));
                 var controller = GetAnimationController(imageControl);
                 if (controller != null)
@@ -300,8 +302,28 @@ namespace WpfAnimatedGif
             {
                 imageControl.Loaded += ImageControlLoaded;
                 imageControl.Unloaded += ImageControlUnloaded;
+                imageControl.IsVisibleChanged += VisibilityChanged;
+
                 if (imageControl.IsLoaded)
                     InitAnimationOrImage(imageControl);
+            }
+        }
+
+        private static void VisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is Image img && img.IsLoaded)
+            {
+                var controller = GetAnimationController(img);
+                if (controller != null)
+                {
+                    if ((bool)e.NewValue)
+                    {
+                        controller.GotoFrame(0);
+                        controller.Play();
+                    }
+                    else
+                        controller.Pause();
+                }
             }
         }
 
@@ -348,7 +370,7 @@ namespace WpfAnimatedGif
             if (imageControl == null)
                 return;
 
-            bool newValue = (bool) e.NewValue;
+            bool newValue = (bool)e.NewValue;
 
             ImageSource source = GetAnimatedSource(imageControl);
             if (source != null && imageControl.IsLoaded)
@@ -372,7 +394,7 @@ namespace WpfAnimatedGif
             bool isInDesignMode = DesignerProperties.GetIsInDesignMode(imageControl);
             bool animateInDesignMode = GetAnimateInDesignMode(imageControl);
             bool shouldAnimate = !isInDesignMode || animateInDesignMode;
-            
+
             // For a BitmapImage with a relative UriSource, the loading is deferred until
             // BaseUri is set. This method will be called again when BaseUri is set.
             bool isLoadingDeferred = IsLoadingDeferred(source, imageControl);
@@ -399,7 +421,7 @@ namespace WpfAnimatedGif
                     if (animation.KeyFrames.Count > 0)
                     {
                         // For some reason, it sometimes throws an exception the first time... the second time it works.
-                        TryTwice(() => imageControl.Source = (ImageSource) animation.KeyFrames[0].Value);
+                        TryTwice(() => imageControl.Source = (ImageSource)animation.KeyFrames[0].Value);
                     }
                     else
                     {
@@ -537,7 +559,7 @@ namespace WpfAnimatedGif
             Stream stream = null;
             Uri uri = null;
             BitmapCreateOptions createOptions = BitmapCreateOptions.None;
-            
+
             var bmp = image as BitmapImage;
             if (bmp != null)
             {
@@ -625,7 +647,7 @@ namespace WpfAnimatedGif
                 if (uri.Authority == "siteoforigin:,,,")
                     sri = Application.GetRemoteStream(uri);
                 else
-                    sri = Application.GetResourceStream(uri); 
+                    sri = Application.GetResourceStream(uri);
 
                 if (sri != null)
                     stream = sri.Stream;
@@ -760,16 +782,16 @@ namespace WpfAnimatedGif
             var metadataDelay = metadata.GetQueryOrDefault("/grctlext/Delay", 10);
             if (metadataDelay != 0)
                 delay = TimeSpan.FromMilliseconds(metadataDelay * 10);
-            var disposalMethod = (FrameDisposalMethod) metadata.GetQueryOrDefault("/grctlext/Disposal", 0);
+            var disposalMethod = (FrameDisposalMethod)metadata.GetQueryOrDefault("/grctlext/Disposal", 0);
             var frameMetadata = new FrameMetadata
-                                {
-                                    Left = metadata.GetQueryOrDefault("/imgdesc/Left", 0),
-                                    Top = metadata.GetQueryOrDefault("/imgdesc/Top", 0),
-                                    Width = metadata.GetQueryOrDefault("/imgdesc/Width", frame.PixelWidth),
-                                    Height = metadata.GetQueryOrDefault("/imgdesc/Height", frame.PixelHeight),
-                                    Delay = delay,
-                                    DisposalMethod = disposalMethod
-                                };
+            {
+                Left = metadata.GetQueryOrDefault("/imgdesc/Left", 0),
+                Top = metadata.GetQueryOrDefault("/imgdesc/Top", 0),
+                Width = metadata.GetQueryOrDefault("/imgdesc/Width", frame.PixelWidth),
+                Height = metadata.GetQueryOrDefault("/imgdesc/Height", frame.PixelHeight),
+                Delay = delay,
+                DisposalMethod = disposalMethod
+            };
             return frameMetadata;
         }
 
@@ -777,21 +799,21 @@ namespace WpfAnimatedGif
         {
             var d = gifMetadata.Descriptor;
             var frameMetadata = new FrameMetadata
-                                {
-                                    Left = d.Left,
-                                    Top = d.Top,
-                                    Width = d.Width,
-                                    Height = d.Height,
-                                    Delay = TimeSpan.FromMilliseconds(100),
-                                    DisposalMethod = FrameDisposalMethod.None
-                                };
+            {
+                Left = d.Left,
+                Top = d.Top,
+                Width = d.Width,
+                Height = d.Height,
+                Delay = TimeSpan.FromMilliseconds(100),
+                DisposalMethod = FrameDisposalMethod.None
+            };
 
             var gce = gifMetadata.Extensions.OfType<GifGraphicControlExtension>().FirstOrDefault();
             if (gce != null)
             {
                 if (gce.Delay != 0)
                     frameMetadata.Delay = TimeSpan.FromMilliseconds(gce.Delay);
-                frameMetadata.DisposalMethod = (FrameDisposalMethod) gce.DisposalMethod;
+                frameMetadata.DisposalMethod = (FrameDisposalMethod)gce.DisposalMethod;
             }
             return frameMetadata;
         }
