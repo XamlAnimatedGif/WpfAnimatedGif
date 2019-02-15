@@ -188,7 +188,19 @@ namespace WpfAnimatedGif.Demo
                 OnPropertyChanged("AutoStart");
             }
         }
-        
+
+        private bool _gifVisible = true;
+        public bool GifVisible
+        {
+            get { return _gifVisible; }
+            set
+            {
+                _gifVisible = value;
+                img.Visibility = _gifVisible ? Visibility.Visible : Visibility.Collapsed;
+
+                OnPropertyChanged("GifVisible");
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

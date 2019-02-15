@@ -290,6 +290,8 @@ namespace WpfAnimatedGif
             {
                 imageControl.Loaded -= ImageControlLoaded;
                 imageControl.Unloaded -= ImageControlUnloaded;
+                imageControl.IsVisibleChanged -= VisibilityChanged;
+
                 AnimationCache.DecrementReferenceCount(oldValue, GetRepeatBehavior(imageControl));
                 var controller = GetAnimationController(imageControl);
                 if (controller != null)
@@ -300,8 +302,28 @@ namespace WpfAnimatedGif
             {
                 imageControl.Loaded += ImageControlLoaded;
                 imageControl.Unloaded += ImageControlUnloaded;
+                imageControl.IsVisibleChanged += VisibilityChanged;
+
                 if (imageControl.IsLoaded)
                     InitAnimationOrImage(imageControl);
+            }
+        }
+
+        private static void VisibilityChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is Image img && img.IsLoaded)
+            {
+                var controller = GetAnimationController(img);
+                if (controller != null)
+                {
+                    if ((bool)e.NewValue)
+                    {
+                        controller.GotoFrame(0);
+                        controller.Play();
+                    }
+                    else
+                        controller.Pause();
+                }
             }
         }
 
@@ -372,7 +394,7 @@ namespace WpfAnimatedGif
             bool isInDesignMode = DesignerProperties.GetIsInDesignMode(imageControl);
             bool animateInDesignMode = GetAnimateInDesignMode(imageControl);
             bool shouldAnimate = !isInDesignMode || animateInDesignMode;
-            
+
             // For a BitmapImage with a relative UriSource, the loading is deferred until
             // BaseUri is set. This method will be called again when BaseUri is set.
             bool isLoadingDeferred = IsLoadingDeferred(source, imageControl);
@@ -537,7 +559,7 @@ namespace WpfAnimatedGif
             Stream stream = null;
             Uri uri = null;
             BitmapCreateOptions createOptions = BitmapCreateOptions.None;
-            
+
             var bmp = image as BitmapImage;
             if (bmp != null)
             {
@@ -625,7 +647,7 @@ namespace WpfAnimatedGif
                 if (uri.Authority == "siteoforigin:,,,")
                     sri = Application.GetRemoteStream(uri);
                 else
-                    sri = Application.GetResourceStream(uri); 
+                    sri = Application.GetResourceStream(uri);
 
                 if (sri != null)
                     stream = sri.Stream;
