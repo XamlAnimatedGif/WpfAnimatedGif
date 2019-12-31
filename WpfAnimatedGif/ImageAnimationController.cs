@@ -20,8 +20,8 @@ namespace WpfAnimatedGif
 
         private readonly Image _image;
         private readonly ObjectAnimationUsingKeyFrames _animation;
-        private readonly AnimationClock _clock;
-        private readonly ClockController _clockController;
+        private AnimationClock _clock;
+        private ClockController _clockController;
 
         internal ImageAnimationController(Image image, ObjectAnimationUsingKeyFrames animation, bool autoStart)
         {
@@ -131,6 +131,116 @@ namespace WpfAnimatedGif
         public void Play()
         {
             _clockController.Resume();
+        }
+
+        /// <summary>
+        /// Changes animation's duration by adjusting each <see cref="System.Windows.Media.Animation.KeyTime"/> 
+        /// to an equal amount of time.
+        /// </summary>
+        /// <param name="newDuration">New duration for the entire animation.</param>
+        public void ChangeDurationFlat(TimeSpan newDuration)
+        {
+            if (newDuration.TotalMilliseconds == Duration.TotalMilliseconds)
+            {
+                return;
+            }
+
+            bool isPaused = _clockController.Clock.IsPaused;
+            if (!isPaused)
+            {
+                _clock.Controller.Pause();
+            }
+
+            var currentFrame = CurrentFrame;
+
+            double sliceTime = newDuration.TotalMilliseconds / _animation.KeyFrames.Count;
+            int frameCount = 0;
+
+            foreach (var keyframeRaw in _animation.KeyFrames)
+            {
+                var keyFrame = keyframeRaw as DiscreteObjectKeyFrame;
+                if (object.ReferenceEquals(null, keyFrame))
+                {
+                    continue;
+                }
+
+                keyFrame.KeyTime = new TimeSpan(0, 0, 0, 0, (int)((double)frameCount * sliceTime));
+                frameCount++;
+            }
+
+            _animation.Duration = newDuration;
+
+            // clock.Duration is derived from animation.Duration
+            _clock = _animation.CreateClock();
+            _clockController = _clock.Controller;
+
+            _image.ApplyAnimationClock(Image.SourceProperty, _clock);
+
+            if (currentFrame >= 0)
+            {
+                GotoFrame(currentFrame);
+            }
+
+            if (!isPaused)
+            {
+                _clock.Controller.Resume();
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Changes animation's duration by multiplying each <see cref="System.Windows.Media.Animation.KeyTime"/> by a scale factor.
+        /// </para>
+        /// <para>
+        /// This method is imprecise if called multiple times. <see cref="System.Windows.Media.Animation.KeyTime"/> should be recalculated
+        /// based on the original timespans instead of scaling the timespans multiple times.
+        /// </para>
+        /// </summary>
+        /// <param name="newDuration">New duration for the entire animation.</param>
+        public void ChangeDurationScale(TimeSpan newDuration)
+        {
+            if (newDuration.TotalMilliseconds == Duration.TotalMilliseconds)
+            {
+                return;
+            }
+
+            bool isPaused = _clockController.Clock.IsPaused;
+            if (!isPaused)
+            {
+                _clock.Controller.Pause();
+            }
+
+            var currentFrame = CurrentFrame;
+            var scaleFactor = newDuration.TotalMilliseconds / _animation.Duration.TimeSpan.TotalMilliseconds;
+
+            foreach (var keyframeRaw in _animation.KeyFrames)
+            {
+                var keyFrame = keyframeRaw as DiscreteObjectKeyFrame;
+                if (object.ReferenceEquals(null, keyFrame))
+                {
+                    continue;
+                }
+
+                keyFrame.KeyTime = new TimeSpan(0, 0, 0, 0, (int)((double)keyFrame.KeyTime.TimeSpan.TotalMilliseconds * scaleFactor));
+            }
+
+            _animation.Duration = newDuration;
+
+            // clock.Duration is derived from animation.Duration
+            _clock = _animation.CreateClock();
+            _clockController = _clock.Controller;
+
+            _image.ApplyAnimationClock(Image.SourceProperty, _clock);
+
+            if (currentFrame >= 0)
+            {
+                GotoFrame(currentFrame);
+            }
+
+            if (!isPaused)
+            {
+                _clock.Controller.Resume();
+            }
         }
 
         /// <summary>
