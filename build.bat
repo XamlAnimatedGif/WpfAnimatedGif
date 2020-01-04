@@ -1,1 +1,2 @@
-msbuild WpfAnimatedGif.sln /t:Clean /t:Rebuild /property:Configuration=Release
+@echo off
+dotnet build -c Release
