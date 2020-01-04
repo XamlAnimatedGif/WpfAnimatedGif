@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -8,21 +9,18 @@ namespace WpfAnimatedGif
 {
     static class AnimationCache
     {
-        private class CacheKey
+        private struct CacheKey
         {
             private readonly ImageSource _source;
-            private readonly RepeatBehavior _repeatBehavior;
 
-            public CacheKey(ImageSource source, RepeatBehavior repeatBehavior)
+            public CacheKey(ImageSource source)
             {
                 _source = source;
-                _repeatBehavior = repeatBehavior;
             }
 
             private bool Equals(CacheKey other)
             {
-                return ImageEquals(_source, other._source)
-                    && Equals(_repeatBehavior, other._repeatBehavior);
+                return ImageEquals(_source, other._source);
             }
 
             public override bool Equals(object obj)
@@ -35,10 +33,7 @@ namespace WpfAnimatedGif
 
             public override int GetHashCode()
             {
-                unchecked
-                {
-                    return (ImageGetHashCode(_source) * 397) ^ _repeatBehavior.GetHashCode();
-                }
+                return ImageGetHashCode(_source);
             }
 
             private static int ImageGetHashCode(ImageSource image)
@@ -99,21 +94,21 @@ namespace WpfAnimatedGif
             }
         }
 
-        private static readonly Dictionary<CacheKey, ObjectAnimationUsingKeyFrames> _animationCache = new Dictionary<CacheKey, ObjectAnimationUsingKeyFrames>();
+        private static readonly Dictionary<CacheKey, AnimationCacheEntry> _animationCache = new Dictionary<CacheKey, AnimationCacheEntry>();
         private static readonly Dictionary<CacheKey, int> _referenceCount = new Dictionary<CacheKey, int>();
 
-        public static void IncrementReferenceCount(ImageSource source, RepeatBehavior repeatBehavior)
+        public static void IncrementReferenceCount(ImageSource source)
         {
-            var cacheKey = new CacheKey(source, repeatBehavior);
+            var cacheKey = new CacheKey(source);
             int count;
             _referenceCount.TryGetValue(cacheKey, out count);
             count++;
             _referenceCount[cacheKey] = count;
         }
 
-        public static void DecrementReferenceCount(ImageSource source, RepeatBehavior repeatBehavior)
+        public static void DecrementReferenceCount(ImageSource source)
         {
-            var cacheKey = new CacheKey(source, repeatBehavior);
+            var cacheKey = new CacheKey(source);
             int count;
             _referenceCount.TryGetValue(cacheKey, out count);
             if (count > 0)
@@ -128,24 +123,37 @@ namespace WpfAnimatedGif
             }
         }
 
-        public static void AddAnimation(ImageSource source, RepeatBehavior repeatBehavior, ObjectAnimationUsingKeyFrames animation)
+        public static void Add(ImageSource source, AnimationCacheEntry entry)
         {
-            var key = new CacheKey(source, repeatBehavior);
-            _animationCache[key] = animation;
+            var key = new CacheKey(source);
+            _animationCache[key] = entry;
         }
 
-        public static void RemoveAnimation(ImageSource source, RepeatBehavior repeatBehavior, ObjectAnimationUsingKeyFrames animation)
+        public static void Remove(ImageSource source)
         {
-            var key = new CacheKey(source, repeatBehavior);
+            var key = new CacheKey(source);
             _animationCache.Remove(key);
         }
 
-        public static ObjectAnimationUsingKeyFrames GetAnimation(ImageSource source, RepeatBehavior repeatBehavior)
+        public static AnimationCacheEntry Get(ImageSource source)
         {
-            var key = new CacheKey(source, repeatBehavior);
-            ObjectAnimationUsingKeyFrames animation;
-            _animationCache.TryGetValue(key, out animation);
-            return animation;
+            var key = new CacheKey(source);
+            _animationCache.TryGetValue(key, out var entry);
+            return entry;
         }
+    }
+
+    internal class AnimationCacheEntry
+    {
+        public AnimationCacheEntry(ObjectKeyFrameCollection keyFrames, Duration duration, int repeatCountFromMetadata)
+        {
+            KeyFrames = keyFrames;
+            Duration = duration;
+            RepeatCountFromMetadata = repeatCountFromMetadata;
+        }
+
+        public ObjectKeyFrameCollection KeyFrames { get; }
+        public Duration Duration { get; }
+        public int RepeatCountFromMetadata { get; }
     }
 }
