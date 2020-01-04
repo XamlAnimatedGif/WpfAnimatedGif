@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
-using WpfAnimatedGif.Properties;
 
 [assembly: AssemblyTitle("WpfAnimatedGif.Demo")]
 [assembly: AssemblyDescription("")]
@@ -15,7 +14,3 @@ using WpfAnimatedGif.Properties;
 [assembly: ComVisible(false)]
 
 [assembly: ThemeInfo(ResourceDictionaryLocation.None, ResourceDictionaryLocation.SourceAssembly)]
-
-
-[assembly: AssemblyVersion(VersionInfo.VersionString)]
-[assembly: AssemblyFileVersion(VersionInfo.VersionString)]

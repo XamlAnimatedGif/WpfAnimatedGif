@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfAnimatedGif.Demo", "WpfA
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0E0CF096-6B3E-4338-9DC7-7A52EE4D4648}"
 	ProjectSection(SolutionItems) = preProject
-		WpfAnimatedGif.nuspec = WpfAnimatedGif.nuspec
+		build.cmd = build.cmd
 	EndProjectSection
 EndProject
 Global
