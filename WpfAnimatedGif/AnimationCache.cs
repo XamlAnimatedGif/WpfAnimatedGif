@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
@@ -95,31 +96,32 @@ namespace WpfAnimatedGif
         }
 
         private static readonly Dictionary<CacheKey, AnimationCacheEntry> _animationCache = new Dictionary<CacheKey, AnimationCacheEntry>();
-        private static readonly Dictionary<CacheKey, int> _referenceCount = new Dictionary<CacheKey, int>();
+        private static readonly Dictionary<CacheKey, HashSet<Image>> _imageControls = new Dictionary<CacheKey, HashSet<Image>>();
 
-        public static void IncrementReferenceCount(ImageSource source)
+        public static void AddControlForSource(ImageSource source, Image imageControl)
         {
             var cacheKey = new CacheKey(source);
-            int count;
-            _referenceCount.TryGetValue(cacheKey, out count);
-            count++;
-            _referenceCount[cacheKey] = count;
+            if (!_imageControls.TryGetValue(cacheKey, out var controls))
+            {
+                _imageControls[cacheKey] = controls = new HashSet<Image>();
+            }
+
+            controls.Add(imageControl);
         }
 
-        public static void DecrementReferenceCount(ImageSource source)
+        public static void RemoveControlForSource(ImageSource source, Image imageControl)
         {
             var cacheKey = new CacheKey(source);
-            int count;
-            _referenceCount.TryGetValue(cacheKey, out count);
-            if (count > 0)
+            if (_imageControls.TryGetValue(cacheKey, out var controls))
             {
-                count--;
-                _referenceCount[cacheKey] = count;
-            }
-            if (count == 0)
-            {
-                _animationCache.Remove(cacheKey);
-                _referenceCount.Remove(cacheKey);
+                if (controls.Remove(imageControl))
+                {
+                    if (controls.Count == 0)
+                    {
+                        _animationCache.Remove(cacheKey);
+                        _imageControls.Remove(cacheKey);
+                    }
+                }
             }
         }
 

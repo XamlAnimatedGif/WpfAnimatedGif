@@ -292,7 +292,7 @@ namespace WpfAnimatedGif
                 imageControl.Unloaded -= ImageControlUnloaded;
                 imageControl.IsVisibleChanged -= VisibilityChanged;
 
-                AnimationCache.DecrementReferenceCount(oldValue);
+                AnimationCache.RemoveControlForSource(oldValue, imageControl);
                 var controller = GetAnimationController(imageControl);
                 if (controller != null)
                     controller.Dispose();
@@ -342,7 +342,7 @@ namespace WpfAnimatedGif
                 return;
             var source = GetAnimatedSource(imageControl);
             if (source != null)
-                AnimationCache.DecrementReferenceCount(source);
+                AnimationCache.RemoveControlForSource(source, imageControl);
             var controller = GetAnimationController(imageControl);
             if (controller != null)
                 controller.Dispose();
@@ -502,7 +502,7 @@ namespace WpfAnimatedGif
                     Duration = cacheEntry.Duration,
                     RepeatBehavior = GetActualRepeatBehavior(imageControl, cacheEntry.RepeatCountFromMetadata)
                 };
-                AnimationCache.IncrementReferenceCount(source);
+                AnimationCache.AddControlForSource(source, imageControl);
                 return animation;
             }
 
