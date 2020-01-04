@@ -15,7 +15,7 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageProjectUrl>https://github.com/XamlAnimatedGif/WpfAnimatedGif</PackageProjectUrl>
-    <PackageReleaseNotes>https://github.com/XamlAnimatedGif/WpfAnimatedGif/wiki/Change-log</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/XamlAnimatedGif/WpfAnimatedGif/releases</PackageReleaseNotes>
     <PackageTags>wpf;animated;gif</PackageTags>
   </PropertyGroup>
   <ItemGroup>
