@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2035
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29609.76
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfAnimatedGif", "WpfAnimatedGif\WpfAnimatedGif.csproj", "{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfAnimatedGif", "WpfAnimatedGif\WpfAnimatedGif.csproj", "{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfAnimatedGif.Demo", "WpfAnimatedGif.Demo\WpfAnimatedGif.Demo.csproj", "{F15F23F1-D349-426E-8A05-AEEF1A663599}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfAnimatedGif.Demo", "WpfAnimatedGif.Demo\WpfAnimatedGif.Demo.csproj", "{F15F23F1-D349-426E-8A05-AEEF1A663599}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0E0CF096-6B3E-4338-9DC7-7A52EE4D4648}"
 	ProjectSection(SolutionItems) = preProject
@@ -22,10 +22,10 @@ Global
 		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{D129789C-3096-4D0B-8DD7-FE24A4DF4B21}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Release|Mixed Platforms.Build.0 = Release|x86
+		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F15F23F1-D349-426E-8A05-AEEF1A663599}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

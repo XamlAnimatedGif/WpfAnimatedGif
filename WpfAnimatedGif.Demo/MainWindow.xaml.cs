@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
-using Microsoft.VisualBasic;
 using Microsoft.Win32;
 
 namespace WpfAnimatedGif.Demo
@@ -245,7 +244,7 @@ namespace WpfAnimatedGif.Demo
 
         private void btnOpenUrl_Click(object sender, RoutedEventArgs e)
         {
-            string url = Interaction.InputBox("Enter the URL of the image to load", "Enter URL");
+            string url = InputBox.Show("Enter the URL of the image to load", "Enter URL");
             if (!string.IsNullOrEmpty(url))
             {
                 Images.Add(url);
