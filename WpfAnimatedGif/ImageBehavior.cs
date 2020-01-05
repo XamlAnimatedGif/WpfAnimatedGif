@@ -52,7 +52,7 @@ namespace WpfAnimatedGif
               "AnimatedSource",
               typeof(ImageSource),
               typeof(ImageBehavior),
-              new UIPropertyMetadata(
+              new PropertyMetadata(
                 null,
                 AnimatedSourceChanged));
 
@@ -85,9 +85,75 @@ namespace WpfAnimatedGif
               "RepeatBehavior",
               typeof(RepeatBehavior),
               typeof(ImageBehavior),
-              new UIPropertyMetadata(
+              new PropertyMetadata(
                   default(RepeatBehavior),
-                  RepeatBehaviorChanged));
+                  AnimationPropertyChanged));
+
+        /// <summary>
+        /// Gets the value of the <c>AnimationSpeedRatio</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element from which to read the property value.</param>
+        /// <returns>The speed ratio for the animated image.</returns>
+        public static double? GetAnimationSpeedRatio(DependencyObject obj)
+        {
+            return (double?)obj.GetValue(AnimationSpeedRatioProperty);
+        }
+
+        /// <summary>
+        /// Sets the value of the <c>AnimationSpeedRatio</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element on which to set the property value.</param>
+        /// <param name="value">The speed ratio of the animated image.</param>
+        /// <remarks>The <c>AnimationSpeedRatio</c> and <c>AnimationDuration</c> properties are mutually exclusive, only one can be set at a time.</remarks>
+        public static void SetAnimationSpeedRatio(DependencyObject obj, double? value)
+        {
+            obj.SetValue(AnimationSpeedRatioProperty, value);
+        }
+
+        /// <summary>
+        /// Identifies the <c>AnimationSpeedRatio</c> attached property.
+        /// </summary>
+        public static readonly DependencyProperty AnimationSpeedRatioProperty =
+            DependencyProperty.RegisterAttached(
+                "AnimationSpeedRatio",
+                typeof(double?),
+                typeof(ImageBehavior),
+                new PropertyMetadata(
+                    null,
+                    AnimationPropertyChanged));
+
+        /// <summary>
+        /// Gets the value of the <c>AnimationDuration</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element from which to read the property value.</param>
+        /// <returns>The duration for the animated image.</returns>
+        public static Duration? GetAnimationDuration(DependencyObject obj)
+        {
+            return (Duration?)obj.GetValue(AnimationDurationProperty);
+        }
+
+        /// <summary>
+        /// Sets the value of the <c>AnimationDuration</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element on which to set the property value.</param>
+        /// <param name="value">The duration of the animated image.</param>
+        /// <remarks>The <c>AnimationSpeedRatio</c> and <c>AnimationDuration</c> properties are mutually exclusive, only one can be set at a time.</remarks>
+        public static void SetAnimationDuration(DependencyObject obj, Duration? value)
+        {
+            obj.SetValue(AnimationDurationProperty, value);
+        }
+
+        /// <summary>
+        /// Identifies the <c>AnimationDuration</c> attached property.
+        /// </summary>
+        public static readonly DependencyProperty AnimationDurationProperty =
+            DependencyProperty.RegisterAttached(
+                "AnimationDuration",
+                typeof(Duration?),
+                typeof(ImageBehavior),
+                new PropertyMetadata(
+                    null,
+                    AnimationPropertyChanged));
 
         /// <summary>
         /// Gets the value of the <c>AnimateInDesignMode</c> attached property for the specified object.
@@ -292,7 +358,7 @@ namespace WpfAnimatedGif
                 imageControl.Unloaded -= ImageControlUnloaded;
                 imageControl.IsVisibleChanged -= VisibilityChanged;
 
-                AnimationCache.DecrementReferenceCount(oldValue, GetRepeatBehavior(imageControl));
+                AnimationCache.RemoveControlForSource(oldValue, imageControl);
                 var controller = GetAnimationController(imageControl);
                 if (controller != null)
                     controller.Dispose();
@@ -342,13 +408,13 @@ namespace WpfAnimatedGif
                 return;
             var source = GetAnimatedSource(imageControl);
             if (source != null)
-                AnimationCache.DecrementReferenceCount(source, GetRepeatBehavior(imageControl));
+                AnimationCache.RemoveControlForSource(source, imageControl);
             var controller = GetAnimationController(imageControl);
             if (controller != null)
                 controller.Dispose();
         }
 
-        private static void RepeatBehaviorChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+        private static void AnimationPropertyChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
             Image imageControl = o as Image;
             if (imageControl == null)
@@ -357,8 +423,6 @@ namespace WpfAnimatedGif
             ImageSource source = GetAnimatedSource(imageControl);
             if (source != null)
             {
-                if (!Equals(e.OldValue, e.NewValue))
-                    AnimationCache.DecrementReferenceCount(source, (RepeatBehavior)e.OldValue);
                 if (imageControl.IsLoaded)
                     InitAnimationOrImage(imageControl);
             }
@@ -445,60 +509,95 @@ namespace WpfAnimatedGif
 
         private static ObjectAnimationUsingKeyFrames GetAnimation(Image imageControl, BitmapSource source)
         {
-            var animation = AnimationCache.GetAnimation(source, GetRepeatBehavior(imageControl));
-            if (animation != null)
-                return animation;
-            GifFile gifMetadata;
-            var decoder = GetDecoder(source, imageControl, out gifMetadata) as GifBitmapDecoder;
-            if (decoder != null && decoder.Frames.Count > 1)
+            var cacheEntry = AnimationCache.Get(source);
+            if (cacheEntry == null)
             {
-                var fullSize = GetFullSize(decoder, gifMetadata);
-                int index = 0;
-                animation = new ObjectAnimationUsingKeyFrames();
-                var totalDuration = TimeSpan.Zero;
-                BitmapSource baseFrame = null;
-                foreach (var rawFrame in decoder.Frames)
+                var decoder = GetDecoder(source, imageControl, out GifFile gifMetadata) as GifBitmapDecoder;
+                if (decoder != null && decoder.Frames.Count > 1)
                 {
-                    var metadata = GetFrameMetadata(decoder, gifMetadata, index);
-
-                    var frame = MakeFrame(fullSize, rawFrame, metadata, baseFrame);
-                    var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
-                    animation.KeyFrames.Add(keyFrame);
-
-                    totalDuration += metadata.Delay;
-
-                    switch (metadata.DisposalMethod)
+                    var fullSize = GetFullSize(decoder, gifMetadata);
+                    int index = 0;
+                    var keyFrames = new ObjectKeyFrameCollection();
+                    var totalDuration = TimeSpan.Zero;
+                    BitmapSource baseFrame = null;
+                    foreach (var rawFrame in decoder.Frames)
                     {
-                        case FrameDisposalMethod.None:
-                        case FrameDisposalMethod.DoNotDispose:
-                            baseFrame = frame;
-                            break;
-                        case FrameDisposalMethod.RestoreBackground:
-                            if (IsFullFrame(metadata, fullSize))
-                            {
-                                baseFrame = null;
-                            }
-                            else
-                            {
-                                baseFrame = ClearArea(frame, metadata);
-                            }
-                            break;
-                        case FrameDisposalMethod.RestorePrevious:
-                            // Reuse same base frame
-                            break;
+                        var metadata = GetFrameMetadata(decoder, gifMetadata, index);
+
+                        var frame = MakeFrame(fullSize, rawFrame, metadata, baseFrame);
+                        var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
+                        keyFrames.Add(keyFrame);
+
+                        totalDuration += metadata.Delay;
+
+                        switch (metadata.DisposalMethod)
+                        {
+                            case FrameDisposalMethod.None:
+                            case FrameDisposalMethod.DoNotDispose:
+                                baseFrame = frame;
+                                break;
+                            case FrameDisposalMethod.RestoreBackground:
+                                if (IsFullFrame(metadata, fullSize))
+                                {
+                                    baseFrame = null;
+                                }
+                                else
+                                {
+                                    baseFrame = ClearArea(frame, metadata);
+                                }
+                                break;
+                            case FrameDisposalMethod.RestorePrevious:
+                                // Reuse same base frame
+                                break;
+                        }
+
+                        index++;
                     }
-
-                    index++;
+                    
+                    int repeatCount = GetRepeatCountFromMetadata(decoder, gifMetadata);
+                    cacheEntry = new AnimationCacheEntry(keyFrames, totalDuration, repeatCount);
+                    AnimationCache.Add(source, cacheEntry);
                 }
-                animation.Duration = totalDuration;
+            }
 
-                animation.RepeatBehavior = GetActualRepeatBehavior(imageControl, decoder, gifMetadata);
+            if (cacheEntry != null)
+            {
+                var animation = new ObjectAnimationUsingKeyFrames
+                {
+                    KeyFrames = cacheEntry.KeyFrames,
+                    Duration = cacheEntry.Duration,
+                    RepeatBehavior = GetActualRepeatBehavior(imageControl, cacheEntry.RepeatCountFromMetadata),
+                    SpeedRatio = GetActualSpeedRatio(imageControl, cacheEntry.Duration)
+                };
 
-                AnimationCache.AddAnimation(source, GetRepeatBehavior(imageControl), animation);
-                AnimationCache.IncrementReferenceCount(source, GetRepeatBehavior(imageControl));
+                AnimationCache.AddControlForSource(source, imageControl);
                 return animation;
             }
+
             return null;
+        }
+
+        private static double GetActualSpeedRatio(Image imageControl, Duration naturalDuration)
+        {
+            var speedRatio = GetAnimationSpeedRatio(imageControl);
+            var duration = GetAnimationDuration(imageControl);
+
+            if (speedRatio.HasValue && duration.HasValue)
+                throw new InvalidOperationException("Cannot set both AnimationSpeedRatio and AnimationDuration");
+
+            if (speedRatio.HasValue)
+                return speedRatio.Value;
+
+            if (duration.HasValue)
+            {
+                if (!duration.Value.HasTimeSpan)
+                    throw new InvalidOperationException("AnimationDuration cannot be Automatic or Forever");
+                if (duration.Value.TimeSpan.Ticks <= 0)
+                    throw new InvalidOperationException("AnimationDuration must be strictly positive");
+                return naturalDuration.TimeSpan.Ticks / (double)duration.Value.TimeSpan.Ticks;
+            }
+
+            return 1.0;
         }
 
         private static BitmapSource ClearArea(BitmapSource frame, FrameMetadata metadata)
@@ -712,37 +811,35 @@ namespace WpfAnimatedGif
             return result;
         }
 
-        private static RepeatBehavior GetActualRepeatBehavior(Image imageControl, BitmapDecoder decoder, GifFile gifMetadata)
+        private static RepeatBehavior GetActualRepeatBehavior(Image imageControl, int repeatCountFromMetadata)
         {
             // If specified explicitly, use this value
             var repeatBehavior = GetRepeatBehavior(imageControl);
             if (repeatBehavior != default(RepeatBehavior))
                 return repeatBehavior;
 
-            int repeatCount;
+            if (repeatCountFromMetadata == 0)
+                return RepeatBehavior.Forever;
+            return new RepeatBehavior(repeatCountFromMetadata);
+        }
+
+        private static int GetRepeatCountFromMetadata(BitmapDecoder decoder, GifFile gifMetadata)
+        {
             if (gifMetadata != null)
             {
-                repeatCount = gifMetadata.RepeatCount;
+                return gifMetadata.RepeatCount;
             }
             else
             {
-                repeatCount = GetRepeatCount(decoder);
+                var ext = GetApplicationExtension(decoder, "NETSCAPE2.0");
+                if (ext != null)
+                {
+                    byte[] bytes = ext.GetQueryOrNull<byte[]>("/Data");
+                    if (bytes != null && bytes.Length >= 4)
+                        return BitConverter.ToUInt16(bytes, 2);
+                }
+                return 1;
             }
-            if (repeatCount == 0)
-                return RepeatBehavior.Forever;
-            return new RepeatBehavior(repeatCount);
-        }
-
-        private static int GetRepeatCount(BitmapDecoder decoder)
-        {
-            var ext = GetApplicationExtension(decoder, "NETSCAPE2.0");
-            if (ext != null)
-            {
-                byte[] bytes = ext.GetQueryOrNull<byte[]>("/Data");
-                if (bytes != null && bytes.Length >= 4)
-                    return BitConverter.ToUInt16(bytes, 2);
-            }
-            return 1;
         }
 
         private static BitmapMetadata GetApplicationExtension(BitmapDecoder decoder, string application)

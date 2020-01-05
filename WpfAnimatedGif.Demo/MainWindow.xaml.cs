@@ -177,6 +177,80 @@ namespace WpfAnimatedGif.Demo
             }
         }
 
+        private double _speedRatio = 1.0;
+        public double SpeedRatio
+        {
+            get => _speedRatio;
+            set
+            {
+                _speedRatio = value;
+                OnPropertyChanged(nameof(SpeedRatio));
+                OnPropertyChanged(nameof(ActualSpeedRatio));
+            }
+        }
+
+        private Duration _duration = TimeSpan.FromSeconds(3);
+        public Duration Duration
+        {
+            get => _duration;
+            set
+            {
+                _duration = value;
+                OnPropertyChanged(nameof(Duration));
+                OnPropertyChanged(nameof(ActualDuration));
+            }
+        }
+
+        private bool _useDefaultDuration = true;
+        public bool UseDefaultDuration
+        {
+            get => _useDefaultDuration;
+            set
+            {
+                _useDefaultDuration = value;
+                OnPropertyChanged(nameof(UseDefaultDuration));
+                OnPropertyChanged(nameof(ActualDuration));
+                OnPropertyChanged(nameof(ActualSpeedRatio));
+            }
+        }
+
+        private bool _useSpeedRatio = false;
+        public bool UseSpeedRatio
+        {
+            get => _useSpeedRatio;
+            set
+            {
+                _useSpeedRatio = value;
+                if (value)
+                {
+                    UseDuration = false;
+                }
+                OnPropertyChanged(nameof(UseSpeedRatio));
+                OnPropertyChanged(nameof(ActualSpeedRatio));
+                OnPropertyChanged(nameof(ActualDuration));
+            }
+        }
+
+        private bool _useDuration = false;
+        public bool UseDuration
+        {
+            get => _useDuration;
+            set
+            {
+                _useDuration = value;
+                if (value)
+                {
+                    UseSpeedRatio = false;
+                }
+                OnPropertyChanged(nameof(UseDuration));
+                OnPropertyChanged(nameof(ActualDuration));
+                OnPropertyChanged(nameof(ActualSpeedRatio));
+            }
+        }
+
+        public Duration? ActualDuration => UseDuration ? Duration : default(Duration?);
+        public double? ActualSpeedRatio => UseSpeedRatio ? SpeedRatio : default(double?);
+
         private bool _autoStart = true;
         public bool AutoStart
         {
