@@ -28,6 +28,8 @@
                 <Grid.RowDefinitions>
                     <RowDefinition />
                     <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -57,21 +59,51 @@
                             Click="btnOpenUrl_Click"/>
                 </Grid>
 
-                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                             Orientation="Horizontal">
+                    <Label Content="Repeat" />
                     <RadioButton Margin="5" Content="Default" IsChecked="{Binding UseDefaultRepeatBehavior}" />
                     <RadioButton Margin="5" Content="Forever" IsChecked="{Binding RepeatForever}" />
                     <RadioButton Margin="5" Content="Specific count" IsChecked="{Binding UseSpecificRepeatCount}" />
                     <TextBox Margin="5" Text="{Binding RepeatCount}" Width="20" />
-                    <CheckBox Margin="5" Content="Auto start" IsChecked="{Binding AutoStart}" />
-                    <CheckBox Margin="5" Content="Visibility" IsChecked="{Binding GifVisible}" />
                 </StackPanel>
                 
                 <StackPanel Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal">
                     <Button Name="btnClearImage" Content="Clear image" Click="btnClearImage_Click" Margin="5,0,0,5"  />
                     <Button Name="btnGC" Content="GC" Click="btnGC_Click" Margin="5,0,5,5" />
                 </StackPanel>
-                
+
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                            Orientation="Horizontal">
+                    <CheckBox Margin="5" Content="Auto start" IsChecked="{Binding AutoStart}" />
+                    <CheckBox Margin="5" Content="Visibility" IsChecked="{Binding GifVisible}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2">
+                    <RadioButton IsChecked="{Binding UseDefaultDuration}" Content="Default duration" />
+                    <RadioButton IsChecked="{Binding UseSpeedRatio}"
+                                 HorizontalContentAlignment="Stretch">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Left" Text="Speed ratio" />
+                            <TextBlock DockPanel.Dock="Right"
+                                       Width="30"
+                                       Text="{Binding SpeedRatio}" />
+                            <Slider Margin="5,0"
+                                    Minimum="0.1" Maximum="10"
+                                    TickPlacement="BottomRight"
+                                    Ticks="1,2,3,4,5,6,7,8,9,10"
+                                    IsSnapToTickEnabled="False"
+                                    Value="{Binding SpeedRatio, Mode=TwoWay}"/>
+                        </DockPanel>
+                    </RadioButton>
+                    <RadioButton IsChecked="{Binding UseDuration}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Duration" />
+                            <TextBox Text="{Binding Duration}" Width="75" Margin="5,0" />
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+
             </Grid>
         </GroupBox>
         <GroupBox Header="Control" DockPanel.Dock="Bottom">
@@ -94,6 +126,8 @@
                        Stretch="None"
                        gif:ImageBehavior.AnimatedSource="{Binding SelectedImage}"
                        gif:ImageBehavior.RepeatBehavior="{Binding RepeatBehavior}"
+                       gif:ImageBehavior.AnimationSpeedRatio="{Binding ActualSpeedRatio}"
+                       gif:ImageBehavior.AnimationDuration="{Binding ActualDuration}"
                        gif:ImageBehavior.AutoStart="{Binding AutoStart}"
                        gif:ImageBehavior.AnimationCompleted="AnimationCompleted" />
 

@@ -52,7 +52,7 @@ namespace WpfAnimatedGif
               "AnimatedSource",
               typeof(ImageSource),
               typeof(ImageBehavior),
-              new UIPropertyMetadata(
+              new PropertyMetadata(
                 null,
                 AnimatedSourceChanged));
 
@@ -85,9 +85,75 @@ namespace WpfAnimatedGif
               "RepeatBehavior",
               typeof(RepeatBehavior),
               typeof(ImageBehavior),
-              new UIPropertyMetadata(
+              new PropertyMetadata(
                   default(RepeatBehavior),
-                  RepeatBehaviorChanged));
+                  AnimationPropertyChanged));
+
+        /// <summary>
+        /// Gets the value of the <c>AnimationSpeedRatio</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element from which to read the property value.</param>
+        /// <returns>The speed ratio for the animated image.</returns>
+        public static double? GetAnimationSpeedRatio(DependencyObject obj)
+        {
+            return (double?)obj.GetValue(AnimationSpeedRatioProperty);
+        }
+
+        /// <summary>
+        /// Sets the value of the <c>AnimationSpeedRatio</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element on which to set the property value.</param>
+        /// <param name="value">The speed ratio of the animated image.</param>
+        /// <remarks>The <c>AnimationSpeedRatio</c> and <c>AnimationDuration</c> properties are mutually exclusive, only one can be set at a time.</remarks>
+        public static void SetAnimationSpeedRatio(DependencyObject obj, double? value)
+        {
+            obj.SetValue(AnimationSpeedRatioProperty, value);
+        }
+
+        /// <summary>
+        /// Identifies the <c>AnimationSpeedRatio</c> attached property.
+        /// </summary>
+        public static readonly DependencyProperty AnimationSpeedRatioProperty =
+            DependencyProperty.RegisterAttached(
+                "AnimationSpeedRatio",
+                typeof(double?),
+                typeof(ImageBehavior),
+                new PropertyMetadata(
+                    null,
+                    AnimationPropertyChanged));
+
+        /// <summary>
+        /// Gets the value of the <c>AnimationDuration</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element from which to read the property value.</param>
+        /// <returns>The duration for the animated image.</returns>
+        public static Duration? GetAnimationDuration(DependencyObject obj)
+        {
+            return (Duration?)obj.GetValue(AnimationDurationProperty);
+        }
+
+        /// <summary>
+        /// Sets the value of the <c>AnimationDuration</c> attached property for the specified object.
+        /// </summary>
+        /// <param name="obj">The element on which to set the property value.</param>
+        /// <param name="value">The duration of the animated image.</param>
+        /// <remarks>The <c>AnimationSpeedRatio</c> and <c>AnimationDuration</c> properties are mutually exclusive, only one can be set at a time.</remarks>
+        public static void SetAnimationDuration(DependencyObject obj, Duration? value)
+        {
+            obj.SetValue(AnimationDurationProperty, value);
+        }
+
+        /// <summary>
+        /// Identifies the <c>AnimationDuration</c> attached property.
+        /// </summary>
+        public static readonly DependencyProperty AnimationDurationProperty =
+            DependencyProperty.RegisterAttached(
+                "AnimationDuration",
+                typeof(Duration?),
+                typeof(ImageBehavior),
+                new PropertyMetadata(
+                    null,
+                    AnimationPropertyChanged));
 
         /// <summary>
         /// Gets the value of the <c>AnimateInDesignMode</c> attached property for the specified object.
@@ -348,7 +414,7 @@ namespace WpfAnimatedGif
                 controller.Dispose();
         }
 
-        private static void RepeatBehaviorChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
+        private static void AnimationPropertyChanged(DependencyObject o, DependencyPropertyChangedEventArgs e)
         {
             Image imageControl = o as Image;
             if (imageControl == null)
@@ -500,13 +566,38 @@ namespace WpfAnimatedGif
                 {
                     KeyFrames = cacheEntry.KeyFrames,
                     Duration = cacheEntry.Duration,
-                    RepeatBehavior = GetActualRepeatBehavior(imageControl, cacheEntry.RepeatCountFromMetadata)
+                    RepeatBehavior = GetActualRepeatBehavior(imageControl, cacheEntry.RepeatCountFromMetadata),
+                    SpeedRatio = GetActualSpeedRatio(imageControl, cacheEntry.Duration)
                 };
+
                 AnimationCache.AddControlForSource(source, imageControl);
                 return animation;
             }
 
             return null;
+        }
+
+        private static double GetActualSpeedRatio(Image imageControl, Duration naturalDuration)
+        {
+            var speedRatio = GetAnimationSpeedRatio(imageControl);
+            var duration = GetAnimationDuration(imageControl);
+
+            if (speedRatio.HasValue && duration.HasValue)
+                throw new InvalidOperationException("Cannot set both AnimationSpeedRatio and AnimationDuration");
+
+            if (speedRatio.HasValue)
+                return speedRatio.Value;
+
+            if (duration.HasValue)
+            {
+                if (!duration.Value.HasTimeSpan)
+                    throw new InvalidOperationException("AnimationDuration cannot be Automatic or Forever");
+                if (duration.Value.TimeSpan.Ticks <= 0)
+                    throw new InvalidOperationException("AnimationDuration must be strictly positive");
+                return naturalDuration.TimeSpan.Ticks / (double)duration.Value.TimeSpan.Ticks;
+            }
+
+            return 1.0;
         }
 
         private static BitmapSource ClearArea(BitmapSource frame, FrameMetadata metadata)
