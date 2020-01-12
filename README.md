@@ -1,7 +1,8 @@
 WPF Animated GIF
 ================
 
-[![Build status](https://ci.appveyor.com/api/projects/status/9qdlpbpf3gyfuvdu?svg=true)](https://ci.appveyor.com/project/thomaslevesque/wpfanimatedgif)
+[![NuGet version](https://img.shields.io/nuget/v/WpfAnimatedGif.svg?logo=nuget)](https://www.nuget.org/packages/WpfAnimatedGif)
+[![AppVeyor build](https://img.shields.io/appveyor/ci/thomaslevesque/wpfanimatedgif.svg?logo=appveyor&logoColor=cccccc)](https://ci.appveyor.com/project/thomaslevesque/wpfanimatedgif)
 
 _Nuget package available here: [WpfAnimatedGif](https://nuget.org/packages/WpfAnimatedGif)._
 
