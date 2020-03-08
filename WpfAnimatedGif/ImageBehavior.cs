@@ -382,13 +382,8 @@ namespace WpfAnimatedGif
                 var controller = GetAnimationController(img);
                 if (controller != null)
                 {
-                    if ((bool)e.NewValue)
-                    {
-                        controller.GotoFrame(0);
-                        controller.Play();
-                    }
-                    else
-                        controller.Pause();
+                    bool isVisible = (bool)e.NewValue;
+                    controller.SetSuspended(!isVisible);
                 }
             }
         }
