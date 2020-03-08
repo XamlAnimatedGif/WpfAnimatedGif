@@ -37,6 +37,7 @@ namespace WpfAnimatedGif
 
             _image.ApplyAnimationClock(Image.SourceProperty, _clock);
 
+            IsPaused = !autoStart;
             if (autoStart)
                 _clockController.Resume();
         }
@@ -75,10 +76,7 @@ namespace WpfAnimatedGif
         /// <summary>
         /// Returns a value that indicates whether the animation is paused.
         /// </summary>
-        public bool IsPaused
-        {
-            get { return _clock.IsPaused; }
-        }
+        public bool IsPaused { get; private set; }
 
         /// <summary>
         /// Returns a value that indicates whether the animation is complete.
@@ -122,6 +120,7 @@ namespace WpfAnimatedGif
         /// </summary>
         public void Pause()
         {
+            IsPaused = true;
             _clockController.Pause();
         }
 
@@ -130,7 +129,30 @@ namespace WpfAnimatedGif
         /// </summary>
         public void Play()
         {
-            _clockController.Resume();
+            IsPaused = false;
+            if (!_isSuspended)
+                _clockController.Resume();
+        }
+
+        private bool _isSuspended;
+        internal void SetSuspended(bool isSuspended)
+        {
+            if (isSuspended == _isSuspended)
+                return;
+
+            bool wasSuspended = _isSuspended;
+            _isSuspended = isSuspended;
+            if (wasSuspended)
+            {
+                if (!IsPaused)
+                {
+                    _clockController.Resume();
+                }
+            }
+            else
+            {
+                _clockController.Pause();
+            }
         }
 
         /// <summary>
