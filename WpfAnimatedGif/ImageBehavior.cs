@@ -449,7 +449,14 @@ namespace WpfAnimatedGif
             SetAnimationController(imageControl, null);
             SetIsAnimationLoaded(imageControl, false);
 
-            BitmapSource source = GetAnimatedSource(imageControl) as BitmapSource;
+            var rawSource = GetAnimatedSource(imageControl);
+            BitmapSource source = rawSource as BitmapSource;
+            if (source == null && rawSource != null)
+            {
+                imageControl.Source = rawSource;
+                return;
+            }
+
             bool isInDesignMode = DesignerProperties.GetIsInDesignMode(imageControl);
             bool animateInDesignMode = GetAnimateInDesignMode(imageControl);
             bool shouldAnimate = !isInDesignMode || animateInDesignMode;
