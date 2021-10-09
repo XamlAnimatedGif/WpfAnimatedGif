@@ -49,9 +49,9 @@ Features
 * Animation preview in design mode (must be enabled explicitly)
 * Support for controlling the animation manually (pause/resume/seek)
 
-Donate
-------
+How to build
+------------
 
-WpfAnimatedGif is a personal open-source project. It is, and will remain, completely free of charge. That being said, if you want to reward me for the time I spent working on it, I'll  gladly accept donations.
+Run `build.cmd`.
 
-[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.me/thomaslevesque)
+Note: the library's version number is determined by [MinVer](https://github.com/adamralph/minver) based on Git history and tags. A consequence of this is that if you build the project outside a Git repository (e.g. if you just download sources), you'll get a version number of 0.0.0.0. So, in order to build with the correct version number, make sure you're in a Git clone of the project, and that your clone has the tags from the upstream project (`git fetch upstream --tags`, assuming your remote for the upstream project is named `upstream`).
