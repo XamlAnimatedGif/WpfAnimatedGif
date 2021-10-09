@@ -48,3 +48,10 @@ Features
 * Notification when the animation completes, in case you need to do something after the animation
 * Animation preview in design mode (must be enabled explicitly)
 * Support for controlling the animation manually (pause/resume/seek)
+
+How to build
+------------
+
+Run `build.cmd`.
+
+Note: the library's version number is determined by [MinVer](https://github.com/adamralph/minver) based on Git history and tags. A consequence of this is that if you build the project outside a Git repository (e.g. if you just download sources), you'll get a version number of 0.0.0.0. So, in order to build with the correct version number, make sure you're in a Git clone of the project, and that your clone has the tags from the upstream project (`git fetch upstream --tags`, assuming your remote for the upstream project is named `upstream`).
