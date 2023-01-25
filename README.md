@@ -55,3 +55,11 @@ How to build
 Run `build.cmd`.
 
 Note: the library's version number is determined by [MinVer](https://github.com/adamralph/minver) based on Git history and tags. A consequence of this is that if you build the project outside a Git repository (e.g. if you just download sources), you'll get a version number of 0.0.0.0. So, in order to build with the correct version number, make sure you're in a Git clone of the project, and that your clone has the tags from the upstream project (`git fetch upstream --tags`, assuming your remote for the upstream project is named `upstream`).
+
+
+File not found issues
+-------------------
+If getting the following error
+`System.Windows.Markup.XamlParseException: Could not load 'file or assembly 'WpfAnimatedGif..`
+ ensure you are not copying the file through file explorer. copy the file directly into solutions explorer
+ e.g drag the file to your assets/image folder  solution explorer . 
