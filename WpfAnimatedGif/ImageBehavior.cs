@@ -303,8 +303,8 @@ namespace WpfAnimatedGif
             EventManager.RegisterRoutedEvent(
                 "AnimationCompleted",
                 RoutingStrategy.Bubble,
-                typeof (RoutedEventHandler),
-                typeof (ImageBehavior));
+                typeof(RoutedEventHandler),
+                typeof(ImageBehavior));
 
         /// <summary>
         /// Adds a handler for the AnimationCompleted attached event.
@@ -429,7 +429,7 @@ namespace WpfAnimatedGif
             if (imageControl == null)
                 return;
 
-            bool newValue = (bool) e.NewValue;
+            bool newValue = (bool)e.NewValue;
 
             ImageSource source = GetAnimatedSource(imageControl);
             if (source != null && imageControl.IsLoaded)
@@ -487,7 +487,7 @@ namespace WpfAnimatedGif
                     if (animation.KeyFrames.Count > 0)
                     {
                         // For some reason, it sometimes throws an exception the first time... the second time it works.
-                        TryTwice(() => imageControl.Source = (ImageSource) animation.KeyFrames[0].Value);
+                        TryTwice(() => imageControl.Source = animation.FirstFrame.Bitmap.Result);
                     }
                     else
                     {
@@ -509,65 +509,22 @@ namespace WpfAnimatedGif
             }
         }
 
-        private static ObjectAnimationUsingKeyFrames GetAnimation(Image imageControl, BitmapSource source)
+        private static DelayFrameAnimation GetAnimation(Image imageControl, BitmapSource source)
         {
             var cacheEntry = AnimationCache.Get(source);
             if (cacheEntry == null)
             {
-                var decoder = GetDecoder(source, imageControl, out GifFile gifMetadata) as GifBitmapDecoder;
-                if (decoder != null && decoder.Frames.Count > 1)
+                if (DelayFrameCollection.TryCreate(source, imageControl, out var collection))
                 {
-                    var fullSize = GetFullSize(decoder, gifMetadata);
-                    int index = 0;
-                    var keyFrames = new ObjectKeyFrameCollection();
-                    var totalDuration = TimeSpan.Zero;
-                    BitmapSource baseFrame = null;
-                    foreach (var rawFrame in decoder.Frames)
-                    {
-                        var metadata = GetFrameMetadata(decoder, gifMetadata, index);
-
-                        var frame = MakeFrame(fullSize, rawFrame, metadata, baseFrame);
-                        var keyFrame = new DiscreteObjectKeyFrame(frame, totalDuration);
-                        keyFrames.Add(keyFrame);
-
-                        totalDuration += metadata.Delay;
-
-                        switch (metadata.DisposalMethod)
-                        {
-                            case FrameDisposalMethod.None:
-                            case FrameDisposalMethod.DoNotDispose:
-                                baseFrame = frame;
-                                break;
-                            case FrameDisposalMethod.RestoreBackground:
-                                if (IsFullFrame(metadata, fullSize))
-                                {
-                                    baseFrame = null;
-                                }
-                                else
-                                {
-                                    baseFrame = ClearArea(frame, metadata);
-                                }
-                                break;
-                            case FrameDisposalMethod.RestorePrevious:
-                                // Reuse same base frame
-                                break;
-                        }
-
-                        index++;
-                    }
-                    
-                    int repeatCount = GetRepeatCountFromMetadata(decoder, gifMetadata);
-                    cacheEntry = new AnimationCacheEntry(keyFrames, totalDuration, repeatCount);
+                    cacheEntry = new AnimationCacheEntry(collection, collection.Duration, collection.RepeatCount);
                     AnimationCache.Add(source, cacheEntry);
                 }
             }
 
             if (cacheEntry != null)
             {
-                var animation = new ObjectAnimationUsingKeyFrames
+                var animation = new DelayFrameAnimation(cacheEntry.KeyFrames)
                 {
-                    KeyFrames = cacheEntry.KeyFrames,
-                    Duration = cacheEntry.Duration,
                     RepeatBehavior = GetActualRepeatBehavior(imageControl, cacheEntry.RepeatCountFromMetadata),
                     SpeedRatio = GetActualSpeedRatio(imageControl, cacheEntry.Duration)
                 };
@@ -602,35 +559,6 @@ namespace WpfAnimatedGif
             return 1.0;
         }
 
-        private static BitmapSource ClearArea(BitmapSource frame, FrameMetadata metadata)
-        {
-            DrawingVisual visual = new DrawingVisual();
-            using (var context = visual.RenderOpen())
-            {
-                var fullRect = new Rect(0, 0, frame.PixelWidth, frame.PixelHeight);
-                var clearRect = new Rect(metadata.Left, metadata.Top, metadata.Width, metadata.Height);
-                var clip = Geometry.Combine(
-                    new RectangleGeometry(fullRect),
-                    new RectangleGeometry(clearRect),
-                    GeometryCombineMode.Exclude,
-                    null);
-                context.PushClip(clip);
-                context.DrawImage(frame, fullRect);
-            }
-
-            var bitmap = new RenderTargetBitmap(
-                    frame.PixelWidth, frame.PixelHeight,
-                    frame.DpiX, frame.DpiY,
-                    PixelFormats.Pbgra32);
-            bitmap.Render(visual);
-
-            var result = new WriteableBitmap(bitmap);
-
-            if (result.CanFreeze && !result.IsFrozen)
-                result.Freeze();
-            return result;
-        }
-
         private static void TryTwice(Action action)
         {
             try
@@ -653,166 +581,6 @@ namespace WpfAnimatedGif
             return false;
         }
 
-        private static BitmapDecoder GetDecoder(BitmapSource image, Image imageControl, out GifFile gifFile)
-        {
-            gifFile = null;
-            BitmapDecoder decoder = null;
-            Stream stream = null;
-            Uri uri = null;
-            BitmapCreateOptions createOptions = BitmapCreateOptions.None;
-
-            var bmp = image as BitmapImage;
-            if (bmp != null)
-            {
-                createOptions = bmp.CreateOptions;
-                if (bmp.StreamSource != null)
-                {
-                    stream = bmp.StreamSource;
-                }
-                else if (bmp.UriSource != null)
-                {
-                    uri = bmp.UriSource;
-                    if (!uri.IsAbsoluteUri)
-                    {
-                        var baseUri = bmp.BaseUri ?? (imageControl as IUriContext)?.BaseUri;
-                        if (baseUri != null)
-                            uri = new Uri(baseUri, uri);
-                    }
-                }
-            }
-            else
-            {
-                BitmapFrame frame = image as BitmapFrame;
-                if (frame != null)
-                {
-                    decoder = frame.Decoder;
-                    Uri.TryCreate(frame.BaseUri, frame.ToString(), out uri);
-                }
-            }
-
-            if (decoder == null)
-            {
-                if (stream != null)
-                {
-                    stream.Position = 0;
-                    decoder = BitmapDecoder.Create(stream, createOptions, BitmapCacheOption.OnLoad);
-                }
-                else if (uri != null && uri.IsAbsoluteUri)
-                {
-                    decoder = BitmapDecoder.Create(uri, createOptions, BitmapCacheOption.OnLoad);
-                }
-            }
-
-            if (decoder is GifBitmapDecoder && !CanReadNativeMetadata(decoder))
-            {
-                if (stream != null)
-                {
-                    stream.Position = 0;
-                    gifFile = GifFile.ReadGifFile(stream, true);
-                }
-                else if (uri != null)
-                {
-                    gifFile = DecodeGifFile(uri);
-                }
-                else
-                {
-                    throw new InvalidOperationException("Can't get URI or Stream from the source. AnimatedSource should be either a BitmapImage, or a BitmapFrame constructed from a URI.");
-                }
-            }
-            if (decoder == null)
-            {
-                throw new InvalidOperationException("Can't get a decoder from the source. AnimatedSource should be either a BitmapImage or a BitmapFrame.");
-            }
-            return decoder;
-        }
-
-        private static bool CanReadNativeMetadata(BitmapDecoder decoder)
-        {
-            try
-            {
-                var m = decoder.Metadata;
-                return m != null;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private static GifFile DecodeGifFile(Uri uri)
-        {
-            Stream stream = null;
-            if (uri.Scheme == PackUriHelper.UriSchemePack)
-            {
-                StreamResourceInfo sri;
-                if (uri.Authority == "siteoforigin:,,,")
-                    sri = Application.GetRemoteStream(uri);
-                else
-                    sri = Application.GetResourceStream(uri);
-
-                if (sri != null)
-                    stream = sri.Stream;
-            }
-            else
-            {
-                WebClient wc = new WebClient();
-                stream = wc.OpenRead(uri);
-            }
-            if (stream != null)
-            {
-                using (stream)
-                {
-                    return GifFile.ReadGifFile(stream, true);
-                }
-            }
-            return null;
-        }
-
-        private static bool IsFullFrame(FrameMetadata metadata, Int32Size fullSize)
-        {
-            return metadata.Left == 0
-                   && metadata.Top == 0
-                   && metadata.Width == fullSize.Width
-                   && metadata.Height == fullSize.Height;
-        }
-
-        private static BitmapSource MakeFrame(
-            Int32Size fullSize,
-            BitmapSource rawFrame, FrameMetadata metadata,
-            BitmapSource baseFrame)
-        {
-            if (baseFrame == null && IsFullFrame(metadata, fullSize))
-            {
-                // No previous image to combine with, and same size as the full image
-                // Just return the frame as is
-                return rawFrame;
-            }
-
-            DrawingVisual visual = new DrawingVisual();
-            using (var context = visual.RenderOpen())
-            {
-                if (baseFrame != null)
-                {
-                    var fullRect = new Rect(0, 0, fullSize.Width, fullSize.Height);
-                    context.DrawImage(baseFrame, fullRect);
-                }
-
-                var rect = new Rect(metadata.Left, metadata.Top, metadata.Width, metadata.Height);
-                context.DrawImage(rawFrame, rect);
-            }
-            var bitmap = new RenderTargetBitmap(
-                fullSize.Width, fullSize.Height,
-                96, 96,
-                PixelFormats.Pbgra32);
-            bitmap.Render(visual);
-
-            var result = new WriteableBitmap(bitmap);
-
-            if (result.CanFreeze && !result.IsFrozen)
-                result.Freeze();
-            return result;
-        }
-
         private static RepeatBehavior GetActualRepeatBehavior(Image imageControl, int repeatCountFromMetadata)
         {
             // If specified explicitly, use this value
@@ -823,25 +591,6 @@ namespace WpfAnimatedGif
             if (repeatCountFromMetadata == 0)
                 return RepeatBehavior.Forever;
             return new RepeatBehavior(repeatCountFromMetadata);
-        }
-
-        private static int GetRepeatCountFromMetadata(BitmapDecoder decoder, GifFile gifMetadata)
-        {
-            if (gifMetadata != null)
-            {
-                return gifMetadata.RepeatCount;
-            }
-            else
-            {
-                var ext = GetApplicationExtension(decoder, "NETSCAPE2.0");
-                if (ext != null)
-                {
-                    byte[] bytes = ext.GetQueryOrNull<byte[]>("/Data");
-                    if (bytes != null && bytes.Length >= 4)
-                        return BitConverter.ToUInt16(bytes, 2);
-                }
-                return 1;
-            }
         }
 
         private static BitmapMetadata GetApplicationExtension(BitmapDecoder decoder, string application)
@@ -861,116 +610,6 @@ namespace WpfAnimatedGif
                 query = string.Format("/[{0}]appext", ++count);
                 extension = decoder.Metadata.GetQueryOrNull<BitmapMetadata>(query);
             }
-            return null;
-        }
-
-        private static FrameMetadata GetFrameMetadata(BitmapDecoder decoder, GifFile gifMetadata, int frameIndex)
-        {
-            if (gifMetadata != null && gifMetadata.Frames.Count > frameIndex)
-            {
-                return GetFrameMetadata(gifMetadata.Frames[frameIndex]);
-            }
-
-            return GetFrameMetadata(decoder.Frames[frameIndex]);
-        }
-
-        private static FrameMetadata GetFrameMetadata(BitmapFrame frame)
-        {
-            var metadata = (BitmapMetadata)frame.Metadata;
-            var delay = TimeSpan.FromMilliseconds(100);
-            var metadataDelay = metadata.GetQueryOrDefault("/grctlext/Delay", 10);
-            if (metadataDelay != 0)
-                delay = TimeSpan.FromMilliseconds(metadataDelay * 10);
-            var disposalMethod = (FrameDisposalMethod) metadata.GetQueryOrDefault("/grctlext/Disposal", 0);
-            var frameMetadata = new FrameMetadata
-                                {
-                                    Left = metadata.GetQueryOrDefault("/imgdesc/Left", 0),
-                                    Top = metadata.GetQueryOrDefault("/imgdesc/Top", 0),
-                                    Width = metadata.GetQueryOrDefault("/imgdesc/Width", frame.PixelWidth),
-                                    Height = metadata.GetQueryOrDefault("/imgdesc/Height", frame.PixelHeight),
-                                    Delay = delay,
-                                    DisposalMethod = disposalMethod
-                                };
-            return frameMetadata;
-        }
-
-        private static FrameMetadata GetFrameMetadata(GifFrame gifMetadata)
-        {
-            var d = gifMetadata.Descriptor;
-            var frameMetadata = new FrameMetadata
-                                {
-                                    Left = d.Left,
-                                    Top = d.Top,
-                                    Width = d.Width,
-                                    Height = d.Height,
-                                    Delay = TimeSpan.FromMilliseconds(100),
-                                    DisposalMethod = FrameDisposalMethod.None
-                                };
-
-            var gce = gifMetadata.Extensions.OfType<GifGraphicControlExtension>().FirstOrDefault();
-            if (gce != null)
-            {
-                if (gce.Delay != 0)
-                    frameMetadata.Delay = TimeSpan.FromMilliseconds(gce.Delay);
-                frameMetadata.DisposalMethod = (FrameDisposalMethod) gce.DisposalMethod;
-            }
-            return frameMetadata;
-        }
-
-        private static Int32Size GetFullSize(BitmapDecoder decoder, GifFile gifMetadata)
-        {
-            if (gifMetadata != null)
-            {
-                var lsd = gifMetadata.Header.LogicalScreenDescriptor;
-                return new Int32Size(lsd.Width, lsd.Height);
-            }
-            int width = decoder.Metadata.GetQueryOrDefault("/logscrdesc/Width", 0);
-            int height = decoder.Metadata.GetQueryOrDefault("/logscrdesc/Height", 0);
-            return new Int32Size(width, height);
-        }
-
-        private struct Int32Size
-        {
-            public Int32Size(int width, int height) : this()
-            {
-                Width = width;
-                Height = height;
-            }
-
-            public int Width { get; private set; }
-            public int Height { get; private set; }
-        }
-
-        private class FrameMetadata
-        {
-            public int Left { get; set; }
-            public int Top { get; set; }
-            public int Width { get; set; }
-            public int Height { get; set; }
-            public TimeSpan Delay { get; set; }
-            public FrameDisposalMethod DisposalMethod { get; set; }
-        }
-
-        private enum FrameDisposalMethod
-        {
-            None = 0,
-            DoNotDispose = 1,
-            RestoreBackground = 2,
-            RestorePrevious = 3
-        }
-
-        private static T GetQueryOrDefault<T>(this BitmapMetadata metadata, string query, T defaultValue)
-        {
-            if (metadata.ContainsQuery(query))
-                return (T)Convert.ChangeType(metadata.GetQuery(query), typeof(T));
-            return defaultValue;
-        }
-
-        private static T GetQueryOrNull<T>(this BitmapMetadata metadata, string query)
-            where T : class
-        {
-            if (metadata.ContainsQuery(query))
-                return metadata.GetQuery(query) as T;
             return null;
         }
 

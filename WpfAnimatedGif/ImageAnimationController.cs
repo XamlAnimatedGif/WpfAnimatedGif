@@ -15,15 +15,15 @@ namespace WpfAnimatedGif
 
         static ImageAnimationController()
         {
-            _sourceDescriptor = DependencyPropertyDescriptor.FromProperty(Image.SourceProperty, typeof (Image));
+            _sourceDescriptor = DependencyPropertyDescriptor.FromProperty(Image.SourceProperty, typeof(Image));
         }
 
         private readonly Image _image;
-        private readonly ObjectAnimationUsingKeyFrames _animation;
+        private readonly DelayFrameAnimation _animation;
         private readonly AnimationClock _clock;
         private readonly ClockController _clockController;
 
-        internal ImageAnimationController(Image image, ObjectAnimationUsingKeyFrames animation, bool autoStart)
+        internal ImageAnimationController(Image image, DelayFrameAnimation animation, bool autoStart)
         {
             _image = image;
             _animation = animation;
@@ -93,7 +93,7 @@ namespace WpfAnimatedGif
         public void GotoFrame(int index)
         {
             var frame = _animation.KeyFrames[index];
-            _clockController.Seek(frame.KeyTime.TimeSpan, TimeSeekOrigin.BeginTime);
+            _clockController.Seek(frame.StartTime, TimeSeekOrigin.BeginTime);
         }
 
         /// <summary>
@@ -106,8 +106,7 @@ namespace WpfAnimatedGif
                 var time = _clock.CurrentTime;
                 var frameAndIndex =
                     _animation.KeyFrames
-                              .Cast<ObjectKeyFrame>()
-                              .Select((f, i) => new { Time = f.KeyTime.TimeSpan, Index = i })
+                              .Select((f, i) => new { Time = f.StartTime, Index = i })
                               .FirstOrDefault(fi => fi.Time >= time);
                 if (frameAndIndex != null)
                     return frameAndIndex.Index;

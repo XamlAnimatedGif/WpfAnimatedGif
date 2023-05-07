@@ -147,14 +147,14 @@ namespace WpfAnimatedGif
 
     internal class AnimationCacheEntry
     {
-        public AnimationCacheEntry(ObjectKeyFrameCollection keyFrames, Duration duration, int repeatCountFromMetadata)
+        public AnimationCacheEntry(DelayFrameCollection keyFrames, Duration duration, int repeatCountFromMetadata)
         {
             KeyFrames = keyFrames;
             Duration = duration;
             RepeatCountFromMetadata = repeatCountFromMetadata;
         }
 
-        public ObjectKeyFrameCollection KeyFrames { get; }
+        public DelayFrameCollection KeyFrames { get; }
         public Duration Duration { get; }
         public int RepeatCountFromMetadata { get; }
     }
