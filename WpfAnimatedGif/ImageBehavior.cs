@@ -487,7 +487,7 @@ namespace WpfAnimatedGif
                     if (animation.KeyFrames.Count > 0)
                     {
                         // For some reason, it sometimes throws an exception the first time... the second time it works.
-                        TryTwice(() => imageControl.Source = animation.FirstFrame.Bitmap.Result);
+                        TryTwice(() => imageControl.Source = animation.FirstFrame.Bitmap.Task.Result);
                     }
                     else
                     {

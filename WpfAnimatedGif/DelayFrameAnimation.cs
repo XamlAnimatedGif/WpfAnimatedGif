@@ -1,25 +1,18 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Runtime.Versioning;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Resources;
-using System.Windows.Threading;
 using WpfAnimatedGif.Decoding;
-using static WpfAnimatedGif.DelayFrameCollection;
 
 namespace WpfAnimatedGif
 {
@@ -56,46 +49,34 @@ namespace WpfAnimatedGif
             DelayFrame prev = null;
             foreach (var frame in KeyFrames)
             {
-                //if (frame.Bitmap.IsFaulted)
-                //{
-                //    throw frame.Bitmap.Exception;
-                //}
-                //
-                //if (!frame.Bitmap.IsCompleted)
-                //{
-                //    if (prev is null)
-                //    {
-                //        _oversleep = animationClock.CurrentTime.Value;
-                //        return defaultDestinationValue;
-                //    }
-                //    else
-                //    {
-                //        _oversleep = animationClock.CurrentTime.Value - prev.StartTime;
-                //        return prev.Bitmap.Result;
-                //    }
-                //}
+                var imageTask = frame.Bitmap.Task;
+
+                if (imageTask.IsFaulted)
+                {
+                    throw imageTask.Exception;
+                }
+
+                if (!imageTask.IsCompleted)
+                {
+                    if (prev is null)
+                    {
+                        _oversleep = animationClock.CurrentTime.Value;
+                        return defaultDestinationValue;
+                    }
+                    else
+                    {
+                        _oversleep = animationClock.CurrentTime.Value - prev.StartTime;
+                        return prev.Bitmap.Task.Result;
+                    }
+                }
 
                 prev = frame;
 
                 if (frame.StartTime <= value && value < frame.EndTime)
-                    return frame.Bitmap.Result;
+                    return frame.Bitmap.Task.Result;
             }
 
-            return prev.Bitmap.Result;
-        }
-    }
-
-    internal class DelayFrame
-    {
-        public DelayBitmapSource Bitmap { get; }
-        public TimeSpan StartTime { get; }
-        public TimeSpan EndTime { get; }
-
-        public DelayFrame(DelayBitmapSource bitmap, TimeSpan start, TimeSpan end)
-        {
-            Bitmap = bitmap;
-            StartTime = start;
-            EndTime = end;
+            return prev.Bitmap.Task.Result;
         }
     }
 
@@ -108,15 +89,16 @@ namespace WpfAnimatedGif
         public DelayFrame this[int idx] => _frames[idx];
         public int Count => _frames.Count;
 
-        public DelayFrameCollection(BitmapDecoder decoder, GifFile gifMetadata)
+        public DelayFrameCollection(GifFile gifMetadata)
         {
             _frames = new List<DelayFrame>();
 
             int index = 0;
-            var fullSize = GetFullSize(decoder, gifMetadata);
+            var fullSize = GetFullSize(gifMetadata);
             var duration = TimeSpan.Zero;
-            var baseFrameTask = new DelayBitmapSource(default(BitmapSource));
-            foreach (var rawFrame in decoder.Frames)
+
+            var baseFrameTask = new DelayBitmapSource(new WriteableBitmap(fullSize.Width, fullSize.Height, 96, 96, PixelFormats.Pbgra32, null));
+            foreach (var rawFrame in gifMetadata.Frames)
             {
                 var frame =
                     MakeDelayFrame(
@@ -124,7 +106,6 @@ namespace WpfAnimatedGif
                         fullSize,
                         duration,
                         baseFrameTask,
-                        decoder,
                         gifMetadata, index,
                         out baseFrameTask);
 
@@ -134,39 +115,38 @@ namespace WpfAnimatedGif
                 _frames.Add(frame);
             }
             Duration = duration;
-            RepeatCount = GetRepeatCountFromMetadata(decoder, gifMetadata);
+            RepeatCount = gifMetadata.RepeatCount;
         }
 
         private DelayFrame MakeDelayFrame(
-            BitmapFrame rawFrame,
+            GifFrame rawFrame,
             Int32Size fullSize,
             TimeSpan duration,
             DelayBitmapSource baseFrameTask,
-            BitmapDecoder decoder,
             GifFile gifMetadata,
             int index,
             out DelayBitmapSource nextBaseFrameTask)
         {
-            var metadata = GetFrameMetadata(decoder, gifMetadata, index);
+            var frameMeta = GetFrameMetadata(gifMetadata.Frames[index]);
 
             var frame = index == 0 ?
-                            new DelayBitmapSource(MakeFrame(fullSize, rawFrame, metadata, baseFrameTask.Result)) :
-                            new DelayBitmapSource(() => MakeFrame(fullSize, rawFrame, metadata, baseFrameTask.Result));
+                            DelayBitmapSource.Create(gifMetadata, rawFrame, frameMeta, baseFrameTask.Task) :
+                            DelayBitmapSource.CreateAsync(gifMetadata, rawFrame, frameMeta, baseFrameTask.Task);
 
-            switch (metadata.DisposalMethod)
+            switch (frameMeta.DisposalMethod)
             {
                 case FrameDisposalMethod.None:
                 case FrameDisposalMethod.DoNotDispose:
                     nextBaseFrameTask = frame;
                     break;
                 case FrameDisposalMethod.RestoreBackground:
-                    if (IsFullFrame(metadata, fullSize))
+                    if (IsFullFrame(frameMeta, fullSize))
                     {
-                        nextBaseFrameTask = new DelayBitmapSource(default(BitmapSource));
+                        nextBaseFrameTask = new DelayBitmapSource(new WriteableBitmap(fullSize.Width, fullSize.Height, 96, 96, PixelFormats.Pbgra32, null));
                     }
                     else
                     {
-                        nextBaseFrameTask = new DelayBitmapSource(() => ClearArea(frame.Result, metadata));
+                        nextBaseFrameTask = DelayBitmapSource.CreateClearAsync(frame.Task, rawFrame);
                     }
                     break;
                 case FrameDisposalMethod.RestorePrevious:
@@ -178,7 +158,7 @@ namespace WpfAnimatedGif
                     throw new InvalidOperationException();
             }
 
-            return new DelayFrame(frame, duration, duration + metadata.Delay);
+            return new DelayFrame(frame, duration, duration + frameMeta.Delay);
         }
 
         public static bool TryCreate(BitmapSource source, IUriContext context, out DelayFrameCollection collection)
@@ -191,7 +171,7 @@ namespace WpfAnimatedGif
                 return false;
             }
 
-            collection = new DelayFrameCollection(decoder, gifMetadata);
+            collection = new DelayFrameCollection(gifMetadata);
             return true;
         }
 
@@ -245,7 +225,7 @@ namespace WpfAnimatedGif
                 }
             }
 
-            if (decoder is GifBitmapDecoder && !CanReadNativeMetadata(decoder))
+            if (decoder is GifBitmapDecoder)
             {
                 if (stream != null)
                 {
@@ -267,19 +247,6 @@ namespace WpfAnimatedGif
                 throw new InvalidOperationException("Can't get a decoder from the source. AnimatedSource should be either a BitmapImage or a BitmapFrame.");
             }
             return decoder;
-        }
-
-        private static bool CanReadNativeMetadata(BitmapDecoder decoder)
-        {
-            try
-            {
-                var m = decoder.Metadata;
-                return m != null;
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         private static GifFile DecodeGifFile(Uri uri)
@@ -305,52 +272,16 @@ namespace WpfAnimatedGif
             {
                 using (stream)
                 {
-                    return GifFile.ReadGifFile(stream, true);
+                    return GifFile.ReadGifFile(stream, false);
                 }
             }
             return null;
         }
 
-        private static Int32Size GetFullSize(BitmapDecoder decoder, GifFile gifMetadata)
+        private static Int32Size GetFullSize(GifFile gifMetadata)
         {
-            if (gifMetadata != null)
-            {
-                var lsd = gifMetadata.Header.LogicalScreenDescriptor;
-                return new Int32Size(lsd.Width, lsd.Height);
-            }
-            int width = decoder.Metadata.GetQueryOrDefault("/logscrdesc/Width", 0);
-            int height = decoder.Metadata.GetQueryOrDefault("/logscrdesc/Height", 0);
-            return new Int32Size(width, height);
-        }
-
-        private static FrameMetadata GetFrameMetadata(BitmapDecoder decoder, GifFile gifMetadata, int frameIndex)
-        {
-            if (gifMetadata != null && gifMetadata.Frames.Count > frameIndex)
-            {
-                return GetFrameMetadata(gifMetadata.Frames[frameIndex]);
-            }
-
-            return GetFrameMetadata(decoder.Frames[frameIndex]);
-        }
-
-        private static FrameMetadata GetFrameMetadata(BitmapFrame frame)
-        {
-            var metadata = (BitmapMetadata)frame.Metadata;
-            var delay = TimeSpan.FromMilliseconds(100);
-            var metadataDelay = metadata.GetQueryOrDefault("/grctlext/Delay", 10);
-            if (metadataDelay != 0)
-                delay = TimeSpan.FromMilliseconds(metadataDelay * 10);
-            var disposalMethod = (FrameDisposalMethod)metadata.GetQueryOrDefault("/grctlext/Disposal", 0);
-            var frameMetadata = new FrameMetadata
-            {
-                Left = metadata.GetQueryOrDefault("/imgdesc/Left", 0),
-                Top = metadata.GetQueryOrDefault("/imgdesc/Top", 0),
-                Width = metadata.GetQueryOrDefault("/imgdesc/Width", frame.PixelWidth),
-                Height = metadata.GetQueryOrDefault("/imgdesc/Height", frame.PixelHeight),
-                Delay = delay,
-                DisposalMethod = disposalMethod
-            };
-            return frameMetadata;
+            var lsd = gifMetadata.Header.LogicalScreenDescriptor;
+            return new Int32Size(lsd.Width, lsd.Height);
         }
 
         private static FrameMetadata GetFrameMetadata(GifFrame gifMetadata)
@@ -372,45 +303,11 @@ namespace WpfAnimatedGif
                 if (gce.Delay != 0)
                     frameMetadata.Delay = TimeSpan.FromMilliseconds(gce.Delay);
                 frameMetadata.DisposalMethod = (FrameDisposalMethod)gce.DisposalMethod;
+
+                frameMetadata.HasTransparency = gce.HasTransparency;
+                frameMetadata.TransparencyIndex = gce.TransparencyIndex;
             }
             return frameMetadata;
-        }
-
-        private static BitmapSource MakeFrame(
-            Int32Size fullSize,
-            BitmapSource rawFrame, FrameMetadata metadata,
-            BitmapSource baseFrame)
-        {
-            if (baseFrame == null && IsFullFrame(metadata, fullSize))
-            {
-                // No previous image to combine with, and same size as the full image
-                // Just return the frame as is
-                return rawFrame;
-            }
-
-            DrawingVisual visual = new DrawingVisual();
-            using (var context = visual.RenderOpen())
-            {
-                if (baseFrame != null)
-                {
-                    var fullRect = new Rect(0, 0, fullSize.Width, fullSize.Height);
-                    context.DrawImage(baseFrame, fullRect);
-                }
-
-                var rect = new Rect(metadata.Left, metadata.Top, metadata.Width, metadata.Height);
-                context.DrawImage(rawFrame, rect);
-            }
-            var bitmap = new RenderTargetBitmap(
-                fullSize.Width, fullSize.Height,
-                96, 96,
-                PixelFormats.Pbgra32);
-            bitmap.Render(visual);
-
-            var result = new WriteableBitmap(bitmap);
-
-            if (result.CanFreeze && !result.IsFrozen)
-                result.Freeze();
-            return result;
         }
 
         private static bool IsFullFrame(FrameMetadata metadata, Int32Size fullSize)
@@ -419,74 +316,6 @@ namespace WpfAnimatedGif
                    && metadata.Top == 0
                    && metadata.Width == fullSize.Width
                    && metadata.Height == fullSize.Height;
-        }
-
-        private static BitmapSource ClearArea(BitmapSource frame, FrameMetadata metadata)
-        {
-            DrawingVisual visual = new DrawingVisual();
-            using (var context = visual.RenderOpen())
-            {
-                var fullRect = new Rect(0, 0, frame.PixelWidth, frame.PixelHeight);
-                var clearRect = new Rect(metadata.Left, metadata.Top, metadata.Width, metadata.Height);
-                var clip = Geometry.Combine(
-                    new RectangleGeometry(fullRect),
-                    new RectangleGeometry(clearRect),
-                    GeometryCombineMode.Exclude,
-                    null);
-                context.PushClip(clip);
-                context.DrawImage(frame, fullRect);
-            }
-
-            var bitmap = new RenderTargetBitmap(
-                    frame.PixelWidth, frame.PixelHeight,
-                    frame.DpiX, frame.DpiY,
-                    PixelFormats.Pbgra32);
-            bitmap.Render(visual);
-
-            var result = new WriteableBitmap(bitmap);
-
-            if (result.CanFreeze && !result.IsFrozen)
-                result.Freeze();
-            return result;
-        }
-
-        private static int GetRepeatCountFromMetadata(BitmapDecoder decoder, GifFile gifMetadata)
-        {
-            if (gifMetadata != null)
-            {
-                return gifMetadata.RepeatCount;
-            }
-            else
-            {
-                var ext = GetApplicationExtension(decoder, "NETSCAPE2.0");
-                if (ext != null)
-                {
-                    byte[] bytes = ext.GetQueryOrNull<byte[]>("/Data");
-                    if (bytes != null && bytes.Length >= 4)
-                        return BitConverter.ToUInt16(bytes, 2);
-                }
-                return 1;
-            }
-        }
-
-        private static BitmapMetadata GetApplicationExtension(BitmapDecoder decoder, string application)
-        {
-            int count = 0;
-            string query = "/appext";
-            BitmapMetadata extension = decoder.Metadata.GetQueryOrNull<BitmapMetadata>(query);
-            while (extension != null)
-            {
-                byte[] bytes = extension.GetQueryOrNull<byte[]>("/Application");
-                if (bytes != null)
-                {
-                    string extApplication = Encoding.ASCII.GetString(bytes);
-                    if (extApplication == application)
-                        return extension;
-                }
-                query = string.Format("/[{0}]appext", ++count);
-                extension = decoder.Metadata.GetQueryOrNull<BitmapMetadata>(query);
-            }
-            return null;
         }
 
         public IEnumerator<DelayFrame> GetEnumerator() => _frames.GetEnumerator();
@@ -504,59 +333,314 @@ namespace WpfAnimatedGif
             public int Width { get; private set; }
             public int Height { get; private set; }
         }
+    }
 
-        private class FrameMetadata
+    internal class FrameMetadata
+    {
+        public int Left { get; set; }
+        public int Top { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public TimeSpan Delay { get; set; }
+        public FrameDisposalMethod DisposalMethod { get; set; }
+        public bool HasTransparency { get; set; }
+        public int TransparencyIndex { get; set; }
+    }
+
+    internal enum FrameDisposalMethod
+    {
+        None = 0,
+        DoNotDispose = 1,
+        RestoreBackground = 2,
+        RestorePrevious = 3
+    }
+
+    internal class DelayFrame
+    {
+        public DelayBitmapSource Bitmap { get; }
+        public TimeSpan StartTime { get; }
+        public TimeSpan EndTime { get; }
+
+        public DelayFrame(DelayBitmapSource bitmap, TimeSpan start, TimeSpan end)
         {
-            public int Left { get; set; }
-            public int Top { get; set; }
-            public int Width { get; set; }
-            public int Height { get; set; }
-            public TimeSpan Delay { get; set; }
-            public FrameDisposalMethod DisposalMethod { get; set; }
-        }
-
-        private enum FrameDisposalMethod
-        {
-            None = 0,
-            DoNotDispose = 1,
-            RestoreBackground = 2,
-            RestorePrevious = 3
-        }
-
-        internal class DelayBitmapSource
-        {
-            private bool _solved;
-            private BitmapSource _value;
-            private Func<BitmapSource> _func;
-
-            public BitmapSource Result
-            {
-                get
-                {
-                    if (_solved)
-                        return _value;
-                    else
-                    {
-                        _solved = true;
-                        return _value = _func();
-                    }
-                }
-            }
-
-            public DelayBitmapSource(BitmapSource value)
-            {
-                _solved = true;
-                _value = value;
-            }
-
-            public DelayBitmapSource(Func<BitmapSource> func)
-            {
-                var dispatcher = Dispatcher.CurrentDispatcher;
-
-                _func = () => dispatcher.Invoke(func);
-            }
+            Bitmap = bitmap;
+            StartTime = start;
+            EndTime = end;
         }
     }
 
+    internal class DelayBitmapSource
+    {
+        public Task<WriteableBitmap> Task { get; }
 
+        public DelayBitmapSource(WriteableBitmap value)
+        {
+            Task = System.Threading.Tasks.Task.FromResult(value);
+        }
+
+        public DelayBitmapSource(Task<WriteableBitmap> task)
+        {
+            Task = task;
+        }
+
+        public static DelayBitmapSource CreateClearAsync(Task<WriteableBitmap> baseImageTask, GifFrame frame)
+        {
+            var task = System.Threading.Tasks.Task.Run(async () =>
+            {
+                var dispatcher = Application.Current.Dispatcher;
+                var baseImage = await baseImageTask;
+
+                return dispatcher.Invoke(() =>
+                {
+                    var bitmap = new WriteableBitmap(baseImage);
+
+                    var rect = new Int32Rect(
+                        frame.Descriptor.Left, frame.Descriptor.Top,
+                        frame.Descriptor.Width, frame.Descriptor.Height);
+
+                    bitmap.WritePixels(rect, new byte[4 * rect.Width * rect.Height], 4 * rect.Width, 0);
+
+                    if (bitmap.CanFreeze)
+                        bitmap.Freeze();
+
+                    return bitmap;
+                });
+            });
+
+            return new DelayBitmapSource(task);
+        }
+
+        public static DelayBitmapSource CreateAsync(GifFile metadata, GifFrame frame, FrameMetadata framemeta, Task<WriteableBitmap> baseImageTask)
+        {
+            var data = new DelayBitmapData(frame);
+            var task = System.Threading.Tasks.Task.Run(async () =>
+            {
+                var dispatcher = Application.Current.Dispatcher;
+
+                var colormap = data.Frame.Descriptor.HasLocalColorTable ?
+                                    data.Frame.LocalColorTable :
+                                    metadata.GlobalColorTable;
+
+                var indics = data.Decompress();
+
+                var baseImage = await baseImageTask;
+
+                return dispatcher.Invoke(() =>
+                {
+                    var bitmap = new WriteableBitmap(baseImage);
+
+                    var rect = new Int32Rect(
+                        frame.Descriptor.Left, frame.Descriptor.Top,
+                        frame.Descriptor.Width, frame.Descriptor.Height);
+
+                    Draw(
+                        bitmap,
+                        rect,
+                        indics,
+                        colormap,
+                        framemeta.HasTransparency ? framemeta.TransparencyIndex : -1);
+
+                    if (bitmap.CanFreeze)
+                        bitmap.Freeze();
+
+                    return bitmap;
+                });
+            });
+
+            return new DelayBitmapSource(task);
+        }
+
+        public static DelayBitmapSource Create(GifFile metadata, GifFrame frame, FrameMetadata framemeta, Task<WriteableBitmap> backgroundTask)
+        {
+            var data = new DelayBitmapData(frame);
+            var dispatcher = Application.Current.Dispatcher;
+
+            var colormap = data.Frame.Descriptor.HasLocalColorTable ?
+                                data.Frame.LocalColorTable :
+                                metadata.GlobalColorTable;
+
+            var indics = data.Decompress();
+
+            var bitmap = new WriteableBitmap(backgroundTask.Result);
+            var rect = new Int32Rect(
+                frame.Descriptor.Left, frame.Descriptor.Top,
+                frame.Descriptor.Width, frame.Descriptor.Height);
+
+            Draw(
+                bitmap,
+                rect,
+                indics,
+                colormap,
+                framemeta.HasTransparency ? framemeta.TransparencyIndex : -1);
+
+            if (bitmap.CanFreeze)
+                bitmap.Freeze();
+
+            return new DelayBitmapSource(bitmap);
+        }
+
+        private static void Draw(WriteableBitmap bitmap, Int32Rect rect, byte[] indics, GifColor[] colormap, int transparencyIdx)
+        {
+            var colors = new byte[indics.Length * 4];
+
+            bitmap.CopyPixels(rect, colors, 4 * rect.Width, 0);
+
+            for (var i = 0; i < indics.Length; ++i)
+            {
+                var idx = indics[i];
+
+                if (idx == transparencyIdx)
+                    continue;
+
+                var color = colormap[idx];
+                colors[4 * i + 0] = color.B;
+                colors[4 * i + 1] = color.G;
+                colors[4 * i + 2] = color.R;
+                colors[4 * i + 3] = 255;
+            }
+
+            bitmap.WritePixels(rect, colors, 4 * rect.Width, 0);
+        }
+    }
+
+    internal class DelayBitmapData
+    {
+        private static readonly int MaxStackSize = 4096;
+        private static readonly int MaxBits = 4097;
+
+        public GifFrame Frame { get; }
+        public GifImageData Data { get; }
+
+        public DelayBitmapData(GifFrame frame)
+        {
+            Frame = frame;
+            Data = frame.ImageData;
+        }
+
+        public byte[] Decompress()
+        {
+            var totalPixels = Frame.Descriptor.Width * Frame.Descriptor.Height;
+
+            // Initialize GIF data stream decoder.
+            var dataSize = Data.LzwMinimumCodeSize;
+            var clear = 1 << dataSize;
+            var endOfInformation = clear + 1;
+            var available = clear + 2;
+            var oldCode = -1;
+            var codeSize = dataSize + 1;
+            var codeMask = (1 << codeSize) - 1;
+
+            var prefixBuf = new short[MaxStackSize];
+            var suffixBuf = new byte[MaxStackSize];
+            var pixelStack = new byte[MaxStackSize];
+            var indics = new byte[totalPixels];
+
+            for (var code = 0; code < clear; code++)
+            {
+                suffixBuf[code] = (byte)code;
+            }
+
+            // Decode GIF pixel stream.
+            int bits, first, top, pixelIndex;
+            var datum = bits = first = top = pixelIndex = 0;
+
+            var blockSize = Data.CompressedData.Length;
+            var tempBuf = Data.CompressedData;
+
+            var blockPos = 0;
+
+            while (blockPos < blockSize)
+            {
+                datum += tempBuf[blockPos] << bits;
+                blockPos++;
+
+                bits += 8;
+
+                while (bits >= codeSize)
+                {
+                    // Get the next code.
+                    var code = datum & codeMask;
+                    datum >>= codeSize;
+                    bits -= codeSize;
+
+                    // Interpret the code
+                    if (code == clear)
+                    {
+                        // Reset decoder.
+                        codeSize = dataSize + 1;
+                        codeMask = (1 << codeSize) - 1;
+                        available = clear + 2;
+                        oldCode = -1;
+                        continue;
+                    }
+
+                    // Check for explicit end-of-stream
+                    if (code == endOfInformation)
+                        return indics;
+
+                    if (oldCode == -1)
+                    {
+                        indics[pixelIndex++] = suffixBuf[code];
+                        oldCode = code;
+                        first = code;
+                        continue;
+                    }
+
+                    var inCode = code;
+                    if (code >= available)
+                    {
+                        pixelStack[top++] = (byte)first;
+                        code = oldCode;
+
+                        if (top == 4097)
+                            ThrowException();
+                    }
+
+                    while (code >= clear)
+                    {
+                        if (code >= MaxBits || code == prefixBuf[code])
+                            ThrowException();
+
+                        pixelStack[top++] = suffixBuf[code];
+                        code = prefixBuf[code];
+
+                        if (top == MaxBits)
+                            ThrowException();
+                    }
+
+                    first = suffixBuf[code];
+                    pixelStack[top++] = (byte)first;
+
+                    // Add new code to the dictionary
+                    if (available < MaxStackSize)
+                    {
+                        prefixBuf[available] = (short)oldCode;
+                        suffixBuf[available] = (byte)first;
+                        available++;
+
+                        if (((available & codeMask) == 0) && (available < MaxStackSize))
+                        {
+                            codeSize++;
+                            codeMask += available;
+                        }
+                    }
+
+                    oldCode = inCode;
+
+                    // Drain the pixel stack.
+                    do
+                    {
+                        indics[pixelIndex++] = pixelStack[--top];
+                    } while (top > 0);
+                }
+            }
+
+            while (pixelIndex < totalPixels)
+                indics[pixelIndex++] = 0; // clear missing pixels
+
+            return indics;
+
+            void ThrowException() => throw new InvalidDataException();
+        }
+    }
 }
