@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
@@ -163,30 +164,44 @@ namespace WpfAnimatedGif
 
         public static bool TryCreate(BitmapSource source, IUriContext context, out DelayFrameCollection collection)
         {
-            var decoder = GetDecoder(source, context, out var gifMetadata);
-
-            if (decoder is null || decoder.Frames.Count <= 1)
+            if (TryCreateGifFile(source, context, out var gifFile))
+            {
+                collection = new DelayFrameCollection(gifFile);
+                return true;
+            }
+            else
             {
                 collection = null;
                 return false;
             }
-
-            collection = new DelayFrameCollection(gifMetadata);
-            return true;
         }
 
-        private static BitmapDecoder GetDecoder(BitmapSource image, IUriContext context, out GifFile gifFile)
+        private static bool TryCreateGifFile(BitmapSource image, IUriContext context, out GifFile gifFile)
         {
-            gifFile = null;
-            BitmapDecoder decoder = null;
-            Stream stream = null;
-            Uri uri = null;
-            BitmapCreateOptions createOptions = BitmapCreateOptions.None;
-
-            var bmp = image as BitmapImage;
-            if (bmp != null)
+            if (image is BitmapFrame frame)
             {
-                createOptions = bmp.CreateOptions;
+                if (frame.Decoder is GifBitmapDecoder)
+                {
+                    if (Uri.TryCreate(frame.BaseUri, frame.ToString(), out var uri))
+                    {
+                        gifFile = Load(null, uri);
+                        return gifFile is null ? false : gifFile.Frames.Count > 1;
+                    }
+                }
+                else
+                {
+                    Debug.Print("AnimatedSource is not GIF image source");
+                }
+
+                gifFile = null;
+                return false;
+            }
+
+            if (image is BitmapImage bmp)
+            {
+                Stream stream = null;
+                Uri uri = null;
+
                 if (bmp.StreamSource != null)
                 {
                     stream = bmp.StreamSource;
@@ -201,64 +216,61 @@ namespace WpfAnimatedGif
                             uri = new Uri(baseUri, uri);
                     }
                 }
-            }
-            else
-            {
-                BitmapFrame frame = image as BitmapFrame;
-                if (frame != null)
+
+                if (stream is null && uri is null)
                 {
-                    decoder = frame.Decoder;
-                    Uri.TryCreate(frame.BaseUri, frame.ToString(), out uri);
+                    Debug.Print("Can't get uri or stream from the source.");
+                    gifFile = null;
+                    return false;
+                }
+
+                try
+                {
+                    gifFile = Load(stream, uri);
+                    return gifFile is null ? false : gifFile.Frames.Count > 1;
+
+                }
+                catch (Exception e)
+                {
+                    Debug.Print("Can't parse gif image: " + e);
+                    gifFile = null;
+                    return false;
                 }
             }
 
-            if (decoder == null)
-            {
-                if (stream != null)
-                {
-                    stream.Position = 0;
-                    decoder = BitmapDecoder.Create(stream, createOptions, BitmapCacheOption.OnLoad);
-                }
-                else if (uri != null && uri.IsAbsoluteUri)
-                {
-                    decoder = BitmapDecoder.Create(uri, createOptions, BitmapCacheOption.OnLoad);
-                }
-            }
+            Debug.Print("Can't get a decoder from the source. AnimatedSource should be either a BitmapImage or a BitmapFrame.");
+            gifFile = null;
+            return false;
 
-            if (decoder is GifBitmapDecoder)
+
+            GifFile Load(Stream imgStream, Uri imgUri)
             {
-                if (stream != null)
+                if (imgStream != null)
                 {
-                    stream.Position = 0;
-                    gifFile = GifFile.ReadGifFile(stream, true);
+                    imgStream.Position = 0;
+                    return GifFile.ReadGifFile(imgStream, false);
                 }
-                else if (uri != null)
+                else if (imgUri != null)
                 {
-                    gifFile = DecodeGifFile(uri);
+                    return DecodeGifFile(imgUri);
                 }
                 else
                 {
-                    throw new InvalidOperationException("Can't get URI or Stream from the source. AnimatedSource should be either a BitmapImage, or a BitmapFrame constructed from a URI.");
+                    return null;
                 }
             }
-
-            if (decoder == null)
-            {
-                throw new InvalidOperationException("Can't get a decoder from the source. AnimatedSource should be either a BitmapImage or a BitmapFrame.");
-            }
-            return decoder;
         }
 
-        private static GifFile DecodeGifFile(Uri uri)
+        private static GifFile DecodeGifFile(Uri imgUri)
         {
             Stream stream = null;
-            if (uri.Scheme == PackUriHelper.UriSchemePack)
+            if (imgUri.Scheme == PackUriHelper.UriSchemePack)
             {
                 StreamResourceInfo sri;
-                if (uri.Authority == "siteoforigin:,,,")
-                    sri = Application.GetRemoteStream(uri);
+                if (imgUri.Authority == "siteoforigin:,,,")
+                    sri = Application.GetRemoteStream(imgUri);
                 else
-                    sri = Application.GetResourceStream(uri);
+                    sri = Application.GetResourceStream(imgUri);
 
                 if (sri != null)
                     stream = sri.Stream;
@@ -266,7 +278,7 @@ namespace WpfAnimatedGif
             else
             {
                 WebClient wc = new WebClient();
-                stream = wc.OpenRead(uri);
+                stream = wc.OpenRead(imgUri);
             }
             if (stream != null)
             {
